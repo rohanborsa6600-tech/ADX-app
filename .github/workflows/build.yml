@@ -1,4 +1,4 @@
-name: Build Android UI App
+name: Auto-Detect Files App
 on: [push]
 jobs:
   build:
@@ -16,16 +16,38 @@ jobs:
           cordova platform add android
           cd ..
           
-          # कॉपी सर्व HTML आणि Images
+          # 1. सर्व फाईल्स ॲपमध्ये टाकणे
           cp *.html myapp/www/
           cp *.png myapp/www/ || true
-          
-          # तुमचे index.html (वर दिलेला नवीन कोड) कॉपी करा
+          cp *.jpg myapp/www/ || true
+          cp *.css myapp/www/ || true
+          cp *.js myapp/www/ || true
           cp index.html myapp/www/
           
+          # 2. --- जादूची स्टेप (AUTOMATIC FILE DETECTOR) ---
+          cd myapp/www
+          
+          # एक नवीन JavaScript फाईल बनवा
+          echo "var bookList = [" > filelist.js
+          
+          # प्रत्येक HTML फाईलसाठी लूप चालवा
+          for f in *.html; do
+            # index.html ला यादीत घेऊ नका
+            if [ "$f" != "index.html" ]; then
+              echo "'$f'," >> filelist.js
+            fi
+          done
+          
+          # कंस पूर्ण करा
+          echo "];" >> filelist.js
+          
+          # परत मुख्य फोल्डरमध्ये या
+          cd ../..
+          
+          # 3. APK बनवा
           cd myapp
           cordova build android --debug
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Liquid-App
+          name: Brahmavidya-Auto-List
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
