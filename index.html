@@ -2,134 +2,161 @@
 <html lang="mr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brahmavidya</title>
-    <script src="filelist.js"></script> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ब्रह्मविद्या कल्पद्रूम</title>
+    <script src="filelist.js"></script>
     <style>
+        /* --- GLOBAL STYLES --- */
         body {
             margin: 0; padding: 0;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background: url('bg.png') no-repeat center center fixed; 
             background-size: cover;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            color: white;
             overflow: hidden;
         }
-        .glass-panel {
+        .glass {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 30px;
-            width: 85%;
-            max-width: 350px;
-            text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            max-height: 80vh;
-            overflow-y: auto;
         }
-        /* पिन स्क्रीन */
-        #login-section { display: block; }
-        /* बुक्स लिस्ट स्क्रीन */
-        #book-list-section { display: none; }
-        
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .login-card {
+            border-radius: 25px; padding: 30px; width: 85%; max-width: 350px; text-align: center;
+        }
+        .shlok {
+            font-size: 14px; font-style: italic; margin-bottom: 20px;
+            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px;
+        }
         input {
-            width: 100%; padding: 12px; margin: 10px 0;
-            border-radius: 10px; border: none;
+            width: 100%; padding: 12px; margin: 10px 0; border-radius: 30px; border: none;
             text-align: center; font-size: 18px;
         }
-        button.login-btn {
-            width: 100%; padding: 12px;
-            background: black; color: white;
-            border: none; border-radius: 10px;
-            font-size: 18px; cursor: pointer;
+        button.main-btn {
+            width: 100%; padding: 12px; margin-top: 10px; border-radius: 30px; border: none;
+            background: white; color: black; font-weight: bold; font-size: 18px;
         }
-        
-        /* पुस्तकांच्या बटणांची स्टाईल */
-        .book-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background: rgba(255,255,255,0.9);
-            color: #333;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            transition: 0.3s;
+        .footer-adx {
+            position: absolute; bottom: 20px; font-weight: bold; letter-spacing: 2px; opacity: 0.8;
         }
-        .book-btn:active { transform: scale(0.95); }
+
+        /* --- LIBRARY GRID --- */
+        #library-screen {
+            display: none; width: 100%; height: 100%; padding: 20px; box-sizing: border-box; overflow-y: auto;
+        }
+        .grid-container {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-bottom: 50px;
+        }
+        .book-card {
+            border-radius: 15px; padding: 10px; text-align: center; position: relative;
+        }
+        .book-thumb {
+            width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; background: rgba(0,0,0,0.3);
+        }
+        .book-title {
+            font-size: 15px; font-weight: bold; text-shadow: 0 1px 2px black;
+        }
+
+        /* --- READER SCREEN --- */
+        #reader-screen {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 200;
+        }
+        .nav-bar {
+            height: 50px; background: #222; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
+        }
+        .nav-icon { font-size: 24px; padding: 5px; cursor: pointer; }
+        iframe { width: 100%; height: calc(100% - 50px); border: none; }
     </style>
 </head>
 <body>
 
-    <div class="glass-panel">
-        
-        <div id="login-section">
-            <h2 style="color:white;">ब्रह्मविद्या</h2>
-            <input type="tel" id="pinInput" placeholder="PIN टाका" maxlength="8">
-            <button class="login-btn" onclick="checkPin()">प्रवेश करा</button>
+    <div id="login-screen">
+        <div class="login-card glass">
+            <h2>ब्रह्मविद्या कल्पद्रूम</h2>
+            <div class="shlok">
+                श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>
+                भलेतया हातीं नेदावा : अधिकारेंवीण ।।<br><br>
+                हे ज्ञानसुधा गोमटी : जे पान करीति कर्णपुटीं :<br>
+                तयां कहिं नाहिं कामाठी : जन्ममरणाची ।।
+            </div>
+            <input type="tel" id="pinInput" placeholder="PIN" maxlength="8">
+            <button class="main-btn" onclick="checkPin()">LOGIN</button>
         </div>
+        <div class="footer-adx">ADX</div>
+    </div>
 
-        <div id="book-list-section">
-            <h2 style="color:white;">तुमचे ग्रंथ</h2>
-            <div id="dynamic-list"></div>
-        </div>
+    <div id="library-screen">
+        <h2 style="text-align:center;">ग्रंथालय</h2>
+        <div class="grid-container" id="grid-box"></div>
+    </div>
 
+    <div id="reader-screen">
+        <div class="nav-bar">
+            <div class="nav-icon" onclick="closeBook()">&#10094;</div> <span id="reading-title">वाचन</span>
+            <div class="nav-icon" onclick="closeBook()">&#127968;</div> </div>
+        <iframe id="book-frame"></iframe>
     </div>
 
     <script>
         function checkPin() {
-            var pin = document.getElementById("pinInput").value;
-            if (pin === "92252320") {
-                loadBooks();
-            } else {
-                alert("चुकीचा पिन!");
-            }
+            if (document.getElementById("pinInput").value === "92252320") {
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("library-screen").style.display = "block";
+                loadLibrary();
+            } else { alert("चुकीचा पिन!"); }
         }
 
-        function loadBooks() {
-            // पिन स्क्रीन लपवा, लिस्ट दाखवा
-            document.getElementById("login-section").style.display = "none";
-            document.getElementById("book-list-section").style.display = "block";
-            
-            var listContainer = document.getElementById("dynamic-list");
-            listContainer.innerHTML = ""; // जुनी लिस्ट साफ करा
+        function loadLibrary() {
+            var container = document.getElementById("grid-box");
+            container.innerHTML = "";
 
-            // bookList हे व्हेरिएबल filelist.js मधून येईल
-            // जर फाईल्स नसतील तर Error दाखवा
-            if (typeof bookList === 'undefined' || bookList.length === 0) {
-                listContainer.innerHTML = "<p style='color:white;'>कोणतेही पुस्तक सापडले नाही.</p>";
+            // जर filelist.js लोड झाले नसेल (Error Prevention)
+            if (typeof autoBookList === 'undefined' || autoBookList.length === 0) {
+                container.innerHTML = "<p>पुस्तके सापडली नाहीत.</p>";
                 return;
             }
 
-            // --- इथे खरी जादू आहे ---
-            // लिस्टमध्ये जेवढी नावे आहेत, तेवढी बटणे बनवा
-            bookList.forEach(function(fileName) {
-                // बटण तयार करा
-                var btn = document.createElement("button");
-                btn.className = "book-btn";
+            autoBookList.forEach(function(book) {
+                var card = document.createElement("div");
+                card.className = "book-card glass";
                 
-                // बटणावरचे नाव (.html काढून टाका म्हणजे छान दिसेल)
-                var displayName = fileName.replace(".html", "").replace(/_/g, " ");
-                btn.innerText = displayName;
+                // डिफॉल्ट इमेज (जर इमेज नसेल तर)
+                var imgSrc = book.image ? book.image : ""; 
+                var imgTag = imgSrc ? `<img src="${imgSrc}" class="book-thumb">` : `<div class="book-thumb" style="display:flex;align-items:center;justify-content:center;font-size:40px;">📖</div>`;
+
+                // नावातून "_" काढून स्पेस देणे
+                var cleanTitle = book.name.replace(/_/g, " ");
+
+                card.innerHTML = imgTag + `<div class="book-title">${cleanTitle}</div>`;
                 
-                // क्लिक केल्यावर ती फाईल उघडा
-                btn.onclick = function() {
-                    window.location.href = fileName;
+                card.onclick = function() {
+                    openBook(book.file, cleanTitle);
                 };
-                
-                // लिस्टमध्ये जोडा
-                listContainer.appendChild(btn);
+                container.appendChild(card);
             });
         }
-    </script>
 
+        function openBook(url, title) {
+            document.getElementById("library-screen").style.display = "none";
+            document.getElementById("reader-screen").style.display = "block";
+            document.getElementById("reading-title").innerText = title;
+            document.getElementById("book-frame").src = url;
+        }
+
+        function closeBook() {
+            document.getElementById("reader-screen").style.display = "none";
+            document.getElementById("library-screen").style.display = "block";
+            document.getElementById("book-frame").src = "";
+        }
+    </script>
 </body>
 </html>
