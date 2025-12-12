@@ -1,49 +1,31 @@
-name: Build APK Direct
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
-
+name: Build Android UI App
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          
-      - name: Install Cordova
-        run: npm install -g cordova
-        
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          
-      - name: Create and Build App
-        run: |
-          # 1. Cordova Project Create
+      - uses: actions/setup-node@v3
+        with: { node-version: 16 }
+      - run: npm install -g cordova
+      - uses: actions/setup-java@v3
+        with: { distribution: 'temurin', java-version: '17' }
+      - run: |
           cordova create myapp com.bk.app "Brahmavidya"
-          
-          # 2. Add Android Platform
           cd myapp
           cordova platform add android
-          
-          # 3. Copy your files (Check if index.html exists in root)
           cd ..
-          if [ -f "index.html" ]; then cp index.html myapp/www/; else echo "index.html not found, using default"; fi
-          if [ -f "bg.png" ]; then cp bg.png myapp/www/; fi
           
-          # 4. Build APK
+          # कॉपी सर्व HTML आणि Images
+          cp *.html myapp/www/
+          cp *.png myapp/www/ || true
+          
+          # तुमचे index.html (वर दिलेला नवीन कोड) कॉपी करा
+          cp index.html myapp/www/
+          
           cd myapp
-          cordova build android --release -- --packageType=apk
-          
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+          cordova build android --debug
+      - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-App
-          path: myapp/platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          name: Brahmavidya-Liquid-App
+          path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
