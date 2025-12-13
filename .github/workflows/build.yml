@@ -1,4 +1,4 @@
-name: Auto-Match Files App
+name: Build Brahmavidya App
 on: [push]
 jobs:
   build:
@@ -13,51 +13,46 @@ jobs:
       - run: |
           cordova create myapp com.bk.app "Brahmavidya"
           cd myapp
+          
+          # Plugins (Security & Network)
+          cordova plugin add cordova-plugin-privacy-screen
+          cordova plugin add cordova-plugin-network-information
           cordova platform add android
+          
+          # Clean Permissions
+          sed -i '/<preference name="Permissions"/d' config.xml
           cd ..
           
-          # 1. सर्व फाईल्स कॉपी करा
-          echo "Copying all files..."
+          # Auto-Detect Logic (Generates filelist.js)
+          cd myapp/www
+          echo "var autoBookList = [" > filelist.js
+          # Go back to root to find files
+          cd ../..
+          
+          # Copy Files Logic
           cp *.html myapp/www/
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
-          cp *.jpeg myapp/www/ || true
-          cp *.css myapp/www/ || true
-          cp *.js myapp/www/ || true
           cp index.html myapp/www/
           
-          # 2. --- जादू: HTML आणि IMAGE जोड्या लावणे ---
+          # Generate List
           cd myapp/www
-          echo "var autoBookList = [" > filelist.js
-          
           for f in *.html; do
-            if [ "$f" != "index.html" ]; then
-              # फाईलच्या नावातून .html काढून टाका (उदा. Sutra)
+            if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
               baseName=$(basename "$f" .html)
-              
-              # इमेज शोधणे (jpg किंवा png)
-              if [ -f "$baseName.jpg" ]; then
-                  imgFile="$baseName.jpg"
-              elif [ -f "$baseName.png" ]; then
-                  imgFile="$baseName.png"
-              elif [ -f "$baseName.jpeg" ]; then
-                  imgFile="$baseName.jpeg"
-              else
-                  imgFile="" # इमेज नाही
-              fi
-              
-              # JS लिस्ट मध्ये लिहिणे
-              echo "{ name: '$baseName', file: '$f', image: '$imgFile' }," >> filelist.js
+              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; 
+              elif [ -f "$baseName.png" ]; then img="$baseName.png"; 
+              else img=""; fi
+              echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
             fi
           done
-          
           echo "];" >> filelist.js
           cd ../..
           
-          # 3. APK बिल्ड करा
+          # Build APK
           cd myapp
           cordova build android --debug
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Auto-Grid
+          name: Brahmavidya-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
