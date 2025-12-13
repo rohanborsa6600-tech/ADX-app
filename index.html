@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:; script-src 'self' https://www.gstatic.com 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebaseio.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:; script-src 'self' https://www.gstatic.com 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebaseio.com wss://*.firebasedatabase.app;">
 
     <title>ब्रह्मविद्या कल्पद्रूम</title>
     
@@ -13,10 +13,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
     <style>
-        /* CSS Styles */
         body { margin: 0; font-family: sans-serif; height: 100vh; background: #222; color: white; overflow: hidden; }
         #login-screen, #library-screen { position: absolute; width: 100%; height: 100%; }
         #library-screen { display: none; }
+        
         .glass-card { 
             background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
             padding: 20px; border-radius: 15px; text-align: center;
@@ -46,15 +46,15 @@
     </div>
 
     <script>
-        // तुमची खरी लिंक इथे टाकली आहे (asia-southeast1)
+        // --- तुमची नवीन लिंक (adx-bk) ---
         var firebaseConfig = { 
-            databaseURL: "https://brahmvidya-app-default-rtdb.asia-southeast1.firebasedatabase.app/" 
+            databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
         
         try {
             firebase.initializeApp(firebaseConfig);
             var db = firebase.database();
-            document.getElementById('status').innerText = "Ready to Login";
+            document.getElementById('status').innerText = "Ready";
         } catch(e) {
             alert("Firebase Error: " + e.message);
         }
@@ -67,16 +67,13 @@
             if(pin === "92252320") {
                 document.getElementById('status').innerText = "Logging in...";
                 
-                // Admin ला डेटा पाठवा
+                // Admin ला कळवा
                 if(navigator.onLine) {
                     db.ref('users/' + deviceId).update({
                         last_login: new Date().toISOString(),
                         device_name: "Android User"
-                    }).then(() => {
-                        // Success
                     });
                     
-                    // पुस्तकांची यादी पाठवा
                     if(typeof autoBookList !== 'undefined') {
                         db.ref('library_catalog').set(autoBookList);
                     }
