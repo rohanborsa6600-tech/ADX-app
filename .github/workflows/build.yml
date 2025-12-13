@@ -14,8 +14,8 @@ jobs:
           cordova create myapp com.bk.app "Brahmavidya"
           cd myapp
           
-          # --- FIX: प्लगइनची लिंक बदलली आहे (Direct GitHub Link) ---
-          cordova plugin add https://github.com/miki325/cordova-plugin-privacy-screen.git
+          # --- FIX: खराब प्लगइन काढून टाकला आहे ---
+          # फक्त Network Plugin ठेवा जो 100% चालतो
           cordova plugin add cordova-plugin-network-information
           
           cordova platform add android
@@ -30,13 +30,11 @@ jobs:
           cp *.jpg myapp/www/ || true
           cp index.html myapp/www/
           
-          # ऑटोमॅटिक लिस्ट बनवणे
+          # ऑटोमॅटिक लिस्ट
           cd myapp/www
           echo "var autoBookList = [" > filelist.js
-          # फाईल्स शोधण्यासाठी रूटवर परत जा
           cd ../..
           
-          # लिस्ट जनरेट करा
           cd myapp/www
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
@@ -55,5 +53,5 @@ jobs:
           cordova build android --debug
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Fixed-APK
+          name: Brahmavidya-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
