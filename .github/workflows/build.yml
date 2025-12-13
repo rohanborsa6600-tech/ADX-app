@@ -14,8 +14,7 @@ jobs:
           cordova create myapp com.bk.app "Brahmavidya"
           cd myapp
           
-          # --- FIX: खराब प्लगइन काढून टाकला आहे ---
-          # फक्त Network Plugin ठेवा जो 100% चालतो
+          # --- फक्त हा एकच प्लगइन ठेवा ---
           cordova plugin add cordova-plugin-network-information
           
           cordova platform add android
