@@ -14,43 +14,50 @@ jobs:
           cordova create myapp com.bk.app "Brahmavidya"
           cd myapp
           
-          # 1. फक्त नेटवर्क प्लगइन ठेवा (Privacy प्लगइन काढला आहे)
+          # 1. PLUGINS (Full Screen & Network साठी)
           cordova plugin add cordova-plugin-network-information
+          cordova plugin add cordova-plugin-statusbar
           
           cordova platform add android
           
-          # 2. FIX: "Application Error" जाण्यासाठी Timeout वाढवला (70 सेकंद)
+          # 2. FULL SCREEN SETTINGS
+          sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
+          sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
           sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
           
-          # 3. परवानग्या कमी करणे
+          # 3. Permissions Clean up
           sed -i '/<preference name="Permissions"/d' config.xml
           cd ..
           
-          # 4. फाईल्स कॉपी करणे
+          # 4. Copy Files
           cp *.html myapp/www/
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
+          cp *.jpeg myapp/www/ || true
           cp index.html myapp/www/
           
-          # 5. ऑटोमॅटिक लिस्ट बनवणे
+          # 5. SMART FILE LIST (Cover Images शोधण्यासाठी)
           cd myapp/www
           echo "var autoBookList = [" > filelist.js
-          cd ../..
           
-          cd myapp/www
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
               baseName=$(basename "$f" .html)
-              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; 
-              elif [ -f "$baseName.png" ]; then img="$baseName.png"; 
-              else img=""; fi
+              img=""
+              # Check all image formats
+              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg";
+              elif [ -f "$baseName.JPG" ]; then img="$baseName.JPG";
+              elif [ -f "$baseName.png" ]; then img="$baseName.png";
+              elif [ -f "$baseName.PNG" ]; then img="$baseName.PNG";
+              elif [ -f "$baseName.jpeg" ]; then img="$baseName.jpeg";
+              fi
               echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
             fi
           done
           echo "];" >> filelist.js
           cd ../..
           
-          # 6. APK बिल्ड करणे
+          # 6. BUILD APK
           cd myapp
           cordova build android --debug
       - uses: actions/upload-artifact@v4
