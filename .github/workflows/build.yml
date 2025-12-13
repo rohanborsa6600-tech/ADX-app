@@ -1,4 +1,4 @@
-name: Build Brahmavidya Fixed
+name: Build Brahmavidya Final
 on: [push]
 jobs:
   build:
@@ -14,22 +14,25 @@ jobs:
           cordova create myapp com.bk.app "Brahmavidya"
           cd myapp
           
-          # --- FIX: फक्त हा एकच प्लगइन ठेवा ---
+          # 1. फक्त नेटवर्क प्लगइन ठेवा
           cordova plugin add cordova-plugin-network-information
           
           cordova platform add android
           
-          # परवानग्या कमी करणे
+          # 2. FIX: "Application Error" जाण्यासाठी Timeout वाढवणे
+          sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
+          
+          # 3. परवानग्या कमी करणे
           sed -i '/<preference name="Permissions"/d' config.xml
           cd ..
           
-          # फाईल्स कॉपी करणे
+          # 4. फाईल्स कॉपी करणे
           cp *.html myapp/www/
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
           cp index.html myapp/www/
           
-          # ऑटोमॅटिक लिस्ट
+          # 5. ऑटोमॅटिक लिस्ट बनवणे
           cd myapp/www
           echo "var autoBookList = [" > filelist.js
           cd ../..
@@ -47,7 +50,7 @@ jobs:
           echo "];" >> filelist.js
           cd ../..
           
-          # APK बिल्ड करणे
+          # 6. APK बिल्ड करणे
           cd myapp
           cordova build android --debug
       - uses: actions/upload-artifact@v4
