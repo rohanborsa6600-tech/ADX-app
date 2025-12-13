@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Brahmavidya Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f6f8; }
+        .user-card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        select { padding: 10px; width: 100%; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 1; padding: 10px; cursor: pointer; color: white; border: none; border-radius: 5px; font-weight: bold; }
+        .btn-allow { background: #28a745; } .btn-block { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">👑 Admin Control Panel</h2>
+    <p style="text-align:center; color:green;" id="sync-status">Loading...</p>
+    <div id="users-list">Loading users...</div>
+
+    <script>
+        // --- 1. CONFIG ---
+        var firebaseConfig = { databaseURL: "YOUR_FIREBASE_URL" }; // तुमची URL टाका
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.database();
+
+        // --- 2. LOAD BOOKS (From App Sync) ---
+        var availableBooks = [];
+        db.ref('library_catalog').on('value', (snap) => {
+            var data = snap.val();
+            if(data) {
+                availableBooks = data;
+                document.getElementById('sync-status').innerText = "📚 Books Synced: " + data.length;
+                renderUsers();
+            } else {
+                document.getElementById('sync-status').innerText = "⚠️ Please login to App with Admin PIN first.";
+            }
+        });
+
+        // --- 3. LOAD USERS ---
+        var allUsersSnapshot = null;
+        db.ref('users').on('value', (snap) => { allUsersSnapshot = snap; renderUsers(); });
+
+        function renderUsers() {
+            if(!allUsersSnapshot) return;
+            var html = "";
+            allUsersSnapshot.forEach((child) => {
+                var uid = child.key;
+                var data = child.val();
+                var currentAccess = data.access ? Object.keys(data.access).join(", ") : "None";
+                
+                var options = `<option value="">-- ग्रंथ निवडा --</option>`;
+                availableBooks.forEach(b => options += `<option value="${b.name}">${b.name}</option>`);
+
+                html += `<div class="user-card">
+                    <strong>User ID:</strong> ${uid}<br>
+                    <small>Last Login: ${data.last_login ? data.last_login.split('T')[0] : 'New'}</small><br>
+                    <div style="background:#eee; padding:5px; margin-top:5px;">Allowed: ${currentAccess}</div>
+                    <select id="select_${uid}">${options}</select>
+                    <div class="btn-group">
+                        <button class="btn-allow" onclick="grant('${uid}')">Grant Access</button>
+                        <button class="btn-block" onclick="revoke('${uid}')">Revoke All</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('users-list').innerHTML = html || "<p>No users found.</p>";
+        }
+
+        function grant(uid) {
+            var book = document.getElementById('select_'+uid).value;
+            if(book) { db.ref('users/'+uid+'/access/'+book).set(true); alert("Granted!"); }
+        }
+        function revoke(uid) { if(confirm("Block All?")) db.ref('users/'+uid+'/access').remove(); }
+    </script>
+</body>
+</html>
