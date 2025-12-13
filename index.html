@@ -2,301 +2,268 @@
 <html lang="mr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:; font-src 'self' data:; frame-src 'self' gap:; script-src 'self' https://www.gstatic.com 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebaseio.com wss://*.firebasedatabase.app;">
 
-    <title>ब्रह्मविद्या कल्पद्रूम</title>
+    <title>ब्रह्मविद्या</title>
     
     <script src="filelist.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="cordova.js"></script>
     
     <style>
-        /* --- 1. GLOBAL STYLES & THEMES --- */
-        :root { --glass: rgba(255,255,255,0.2); --text: #000; --bg-overlay: rgba(255,255,255,0.3); }
-        body.dark-mode { --glass: rgba(0,0,0,0.6); --text: #fff; --bg-overlay: rgba(0,0,0,0.7); }
-        
+        /* --- LIQUID GLASS THEME --- */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --text-color: #ffffff;
+        }
+
         body {
-            margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; 
-            color: var(--text);
-            background-color: #222; /* Default Dark */
-            background-size: cover; background-position: center; 
-            transition: 0.5s;
+            margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden;
+            background: #0f0c29; /* Dark Base */
+            color: var(--text-color);
             -webkit-user-select: none; user-select: none;
         }
-        
-        /* Dynamic Backgrounds */
-        body.state-login { background-image: url('login_bg.png'); }
-        body.state-day { background-image: url('day_bg.png'); }
-        body.state-night { background-image: url('night_bg.png'); }
 
-        #login-screen, #library-screen, #reader-screen { position: absolute; width: 100%; height: 100%; }
-        #library-screen, #reader-screen { display: none; }
-
-        /* --- 2. LOGIN UI (Glassmorphism) --- */
-        #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.4); }
+        /* --- LIQUID BACKGROUND ANIMATION --- */
+        .liquid-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            z-index: -2;
+        }
         
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.15); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 25px; border-radius: 20px; text-align: center; 
-            border: 1px solid rgba(255,255,255,0.3); 
-            width: 85%; max-width: 350px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            color: white;
-            animation: fadeIn 1s ease;
+        .blob {
+            position: absolute; filter: blur(40px); opacity: 0.6; z-index: -1;
+            animation: moveBlob 10s infinite alternate;
+        }
+        .blob-1 { top: 10%; left: 10%; width: 200px; height: 200px; background: #ff00cc; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+        .blob-2 { bottom: 20%; right: 10%; width: 250px; height: 250px; background: #3333ff; border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; animation-duration: 15s; }
+        .blob-3 { top: 40%; left: 50%; width: 150px; height: 150px; background: #00ffff; border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation-duration: 12s; }
+
+        @keyframes moveBlob {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(20px, 40px) rotate(20deg); }
         }
 
-        .app-title { font-size: 26px; font-weight: bold; margin-bottom: 15px; text-shadow: 0 2px 5px black; }
+        #login-screen, #library-screen, #reader-screen { position: absolute; width: 100%; height: 100%; display: none; }
 
-        /* Shlok Box */
+        /* --- GLASS CARDS --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 20px;
+        }
+
+        /* LOGIN SCREEN */
+        #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .login-card { padding: 30px; width: 80%; max-width: 350px; text-align: center; }
+        
+        .title-text { font-size: 28px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
         .shlok-box {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px; border-radius: 10px;
-            font-size: 13px; font-style: italic; line-height: 1.6;
-            margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);
-            color: #ffeb3b;
+            font-size: 13px; font-style: italic; color: #ffd700; margin-bottom: 20px;
+            background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px;
         }
 
-        input { 
-            padding: 12px; border-radius: 30px; border: none; text-align: center; 
-            width: 90%; margin-bottom: 15px; font-size: 18px; outline:none; 
-            background: rgba(255,255,255,0.9); color: black;
+        input {
+            width: 90%; padding: 12px; margin: 15px 0;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 25px; color: white; text-align: center; font-size: 18px; outline: none;
+            transition: 0.3s;
         }
+        input:focus { background: rgba(255,255,255,0.2); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+        .btn-liquid {
+            width: 100%; padding: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1));
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 25px;
+            color: white; font-weight: bold; font-size: 16px; cursor: pointer;
+            backdrop-filter: blur(4px); transition: 0.3s;
+        }
+        .btn-liquid:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
+
+        /* LIBRARY SCREEN */
+        .header {
+            padding: 20px; padding-top: 40px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .scroll-area { height: 85vh; overflow-y: auto; padding: 20px; }
+        .grid-view { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-bottom: 50px; }
+
+        .book-card {
+            height: 240px; border-radius: 15px; overflow: hidden; position: relative;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.3s;
+        }
+        .book-card:active { transform: scale(0.96); }
         
-        .btn { 
-            padding: 12px; border-radius: 30px; border: none; 
-            background: white; color: black; font-weight: bold; width: 100%; 
-            cursor: pointer; font-size: 16px; transition: 0.3s;
-        }
-        .btn:active { transform: scale(0.95); }
-
-        .footer {
-            position: absolute; bottom: 20px;
-            color: rgba(255,255,255,0.8);
-            font-size: 14px; font-weight: 500;
-            text-shadow: 0 1px 3px black;
-            letter-spacing: 1px;
-        }
-
-        /* --- 3. LIBRARY UI --- */
-        .header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .scroll-area { height: 85%; overflow-y: auto; padding: 15px; }
+        .thumb { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
         
-        .book-card { background: var(--glass); border-radius: 15px; overflow: hidden; margin-bottom: 15px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); position: relative; }
-        .book-card:active { transform: scale(0.98); }
-
-        /* Grid View */
-        .grid-view { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .grid-view .book-card { height: 220px; display: flex; flex-direction: column; } 
-        .grid-view .thumb { width: 100%; height: 100%; object-fit: cover; } /* Changed to cover for better look */
-        .grid-view .title { 
-            position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); 
-            color: white; padding: 5px; font-size: 12px; text-align: center;
+        .book-title {
+            position: absolute; bottom: 0; width: 100%; padding: 10px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            text-align: center; font-size: 14px; font-weight: 500;
         }
 
-        /* List View */
-        .list-view { display: flex; flex-direction: column; }
-        .list-view .book-card { height: 80px; display: flex; flex-direction: row; align-items: center; padding: 10px; }
-        .list-view .thumb { width: 50px; height: 70px; object-fit: cover; margin-right: 15px; border-radius: 5px; }
-        .list-view .title { font-weight: bold; font-size: 16px; color: var(--text); }
-
-        /* --- 4. READER UI --- */
-        iframe { width: 100%; height: 92%; border: none; background: white; display: block; }
-        .nav { height: 8%; background: #222; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-shadow: 0 2px 10px black; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* READER SCREEN */
+        .reader-nav {
+            height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
+            background: #111; color: white; border-bottom: 1px solid #333;
+        }
+        .close-btn { font-size: 20px; padding: 10px; cursor: pointer; }
+        
+        iframe { width: 100%; height: calc(100% - 60px); border: none; background: white; }
     </style>
 </head>
-<body class="state-login">
+<body>
 
-    <div id="login-screen">
-        <div class="glass-card">
-            <div class="app-title">ब्रह्मविद्या कल्पद्रूम</div>
+    <div class="liquid-bg"></div>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div id="login-screen" style="display:flex;">
+        <div class="glass-panel login-card">
+            <div class="title-text">ब्रह्मविद्या कल्पद्रूम</div>
             
             <div class="shlok-box">
                 "श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>
-                भलेतया हातीं नेदावा : अधिकारेंवीण ।।<br><br>
-                हे ज्ञानसुधा गोमटी : जे पान करीति कर्णपुटीं :<br>
-                तयां कहिं नाहिं कामाठी : जन्ममरणाची ।।"
+                भलेतया हातीं नेदावा : अधिकारेंवीण ।।"
             </div>
 
-            <p id="status" style="font-size:10px; color:lightgreen; margin-bottom:5px;">System Ready</p>
             <input type="tel" id="pin" placeholder="PIN टाका" maxlength="8">
-            <button class="btn" onclick="performLogin()">प्रवेश करा</button>
+            <button class="btn-liquid" onclick="performLogin()">प्रवेश करा</button>
         </div>
-
-        <div class="footer">|| श्री देवदत्त आश्रम, जाधववाडी ||</div>
+        
+        <div style="position:absolute; bottom:20px; font-size:12px; opacity:0.6;">|| श्री देवदत्त आश्रम, जाधववाडी ||</div>
     </div>
 
     <div id="library-screen">
         <div class="header">
-            <strong style="font-size:20px;">ग्रंथालय</strong>
-            <div>
-                <button class="btn" style="width:auto; padding:8px 15px;" onclick="toggleTheme()">🌗</button>
-                <button class="btn" style="width:auto; padding:8px 15px;" onclick="toggleView()">⊞</button>
-            </div>
-        </div>
+            <span style="font-size:22px; font-weight:bold;">ग्रंथालय</span>
+            <div style="width:30px; height:30px; background:rgba(255,255,255,0.2); border-radius:50%;"></div> </div>
         <div class="scroll-area">
             <div id="book-container" class="grid-view"></div>
         </div>
     </div>
 
     <div id="reader-screen">
-        <div class="nav">
-            <span onclick="closeBook()" style="font-size:24px; cursor:pointer;">&#10094; Back</span>
-            <span id="read-title" style="font-size:14px; font-weight:bold; overflow:hidden; white-space:nowrap; max-width:60%;">Reading</span>
-            <span style="width:24px;"></span> </div>
+        <div class="reader-nav">
+            <span class="close-btn" onclick="closeBook()">&#10094; Back</span>
+            <span id="read-title">Reading</span>
+            <span></span>
+        </div>
         <iframe id="frame" src=""></iframe>
     </div>
 
     <script>
-        // --- 1. CONFIGURATION ---
-        // तुमची नवीन लिंक (adx-bk)
+        // 1. BACK BUTTON HANDLING
+        document.addEventListener("deviceready", onDeviceReady, false);
+        function onDeviceReady() {
+            if(window.StatusBar) {
+                window.StatusBar.styleLightContent(); // Status bar text white
+                window.StatusBar.backgroundColorByHexString("#00000000"); // Transparent
+            }
+            document.addEventListener("backbutton", function(e){
+                e.preventDefault();
+                if(document.getElementById('reader-screen').style.display === 'block'){
+                    closeBook();
+                } else {
+                    navigator.app.exitApp();
+                }
+            }, false);
+        }
+
+        // 2. CONFIG
         var firebaseConfig = { 
-            databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app/"
+            databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
-        
         try { firebase.initializeApp(firebaseConfig); var db = firebase.database(); } catch(e){}
         
         var deviceId = localStorage.getItem('did') || 'USER_' + Math.floor(Math.random()*10000);
         localStorage.setItem('did', deviceId);
-
-        // ऑफलाइन परवानग्या (Memory)
         var allowedBooks = JSON.parse(localStorage.getItem('my_allowed_books')) || {};
 
-        // --- 2. LOGIN LOGIC ---
+        // 3. LOGIN LOGIC
         function performLogin() {
             var pin = document.getElementById('pin').value;
-            
             if(pin === "92252320") {
-                // UI बदला
+                // Device Name Detection
+                var modelName = "Android Device";
+                try {
+                   var match = navigator.userAgent.match(/Android.*?;(.*?)\)/);
+                   if (match && match[1]) modelName = match[1].trim();
+                } catch(e) {}
+
+                if(navigator.onLine) {
+                    db.ref('users/' + deviceId).update({ last_login: new Date().toISOString(), device_name: modelName });
+                    if(typeof autoBookList !== 'undefined') db.ref('library_catalog').set(autoBookList);
+                }
+
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('library-screen').style.display = 'block';
                 
-                // Theme Set
-                var savedTheme = localStorage.getItem('theme') || 'light';
-                if(savedTheme === 'dark') document.body.classList.add('dark-mode');
-                updateBg();
-
-                // Books Load
-                loadBooks();
-
-                // Silent Sync
-                syncInBackground();
+                // Real-time Listener (Instant Revoke)
+                db.ref('users/' + deviceId + '/access').on('value', snap => {
+                    var newAccess = snap.val();
+                    allowedBooks = newAccess ? newAccess : {};
+                    localStorage.setItem('my_allowed_books', JSON.stringify(allowedBooks));
+                    loadBooks();
+                });
             } else {
                 alert("चुकीचा पिन!");
             }
         }
 
-        // --- 3. BACKGROUND SYNC ---
-        function syncInBackground() {
-            if(navigator.onLine) {
-                // Admin ला सांगा
-                db.ref('users/' + deviceId).update({ 
-                    last_login: new Date().toISOString(),
-                    device_name: "Android User"
-                });
-
-                // Book List पाठवा
-                if(typeof autoBookList !== 'undefined') {
-                    db.ref('library_catalog').set(autoBookList);
-                }
-
-                // New Permissions Check
-                db.ref('users/' + deviceId + '/access').once('value', snap => {
-                    var newAccess = snap.val();
-                    if(newAccess) {
-                        localStorage.setItem('my_allowed_books', JSON.stringify(newAccess));
-                        allowedBooks = newAccess;
-                        loadBooks(); // Refresh list silently
-                    }
-                });
-            }
-        }
-
-        // --- 4. RENDER BOOKS (Display Logic) ---
+        // 4. LOAD BOOKS
         function loadBooks() {
             var container = document.getElementById('book-container');
             container.innerHTML = "";
-            
-            // Check if filelist.js is loaded
-            if(typeof autoBookList === 'undefined') {
-                 container.innerHTML = "<p style='text-align:center; padding-top:20px;'>File list not loaded.</p>";
-                 return;
-            }
+            if(typeof autoBookList === 'undefined') return;
 
             var count = 0;
             autoBookList.forEach(book => {
-                // Check Permission
                 if (allowedBooks[book.name]) {
                     count++;
                     var div = document.createElement('div');
-                    div.className = "book-card";
+                    div.className = "book-card glass-panel"; // Glass effect added
                     
-                    // Image Logic
                     var imgHTML = book.image 
                         ? `<img src="${book.image}" class="thumb" onerror="this.style.display='none'">` 
-                        : `<div class="thumb" style="background:#444; display:flex; justify-content:center; align-items:center; color:#888;">No Cover</div>`;
+                        : `<div class="thumb" style="display:flex; justify-content:center; align-items:center; opacity:0.5;">No Cover</div>`;
                     
-                    div.innerHTML = `${imgHTML}<div class="title">${book.name}</div>`;
+                    div.innerHTML = `${imgHTML}<div class="book-title">${book.name}</div>`;
                     
-                    // Click Event -> Open Reader
-                    div.onclick = function() { openReader(book.file, book.name); };
-                    
+                    div.onclick = function() { 
+                        if(allowedBooks[book.name]) openReader(book.file, book.name);
+                        else loadBooks(); // If revoked instantly
+                    };
                     container.appendChild(div);
                 }
             });
 
-            if(count === 0) {
-                container.innerHTML = `<p style="text-align:center; padding-top:50px; opacity:0.8;">
-                    अद्याप कोणताही ग्रंथ उपलब्ध नाही.<br>
-                    <small>(कृपया ॲडमिन कडून परवानगी घ्या)</small>
-                </p>`;
-            }
+            if(count === 0) container.innerHTML = "<p style='text-align:center; padding-top:50px; opacity:0.7;'>No books available.</p>";
         }
 
-        // --- 5. READER LOGIC (Fixed) ---
         function openReader(file, title) {
-            var reader = document.getElementById('reader-screen');
-            var library = document.getElementById('library-screen');
-            var frame = document.getElementById('frame');
-
-            library.style.display = 'none';
-            reader.style.display = 'block';
-            
-            // Setting source (Ensure file exists in www folder)
-            frame.src = file; 
+            document.getElementById('library-screen').style.display = 'none';
+            document.getElementById('reader-screen').style.display = 'block';
+            document.getElementById('frame').src = file;
             document.getElementById('read-title').innerText = title;
         }
 
         function closeBook() {
             document.getElementById('reader-screen').style.display = 'none';
             document.getElementById('library-screen').style.display = 'block';
-            document.getElementById('frame').src = ""; // Clear memory
-        }
-
-        // --- 6. UI HELPERS ---
-        function toggleTheme() { 
-            document.body.classList.toggle('dark-mode'); 
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            updateBg(); 
-        }
-        function toggleView() { 
-            var c = document.getElementById('book-container');
-            c.classList.toggle('grid-view'); c.classList.toggle('list-view');
-        }
-        function updateBg() {
-            var mode = document.body.classList.contains('dark-mode') ? 'night' : 'day';
-            // If on login screen, force login bg
-            if(document.getElementById('login-screen').style.display !== 'none') {
-                 document.body.className = 'state-login';
-                 if(mode === 'night') document.body.classList.add('dark-mode'); // keep text color
-            } else {
-                 document.body.className = 'state-' + mode;
-                 if(mode === 'night') document.body.classList.add('dark-mode');
-            }
+            document.getElementById('frame').src = "";
         }
     </script>
 </body>
