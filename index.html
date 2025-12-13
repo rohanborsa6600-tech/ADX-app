@@ -3,188 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ब्रह्मविद्या कल्पद्रूम</title>
+    
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:; script-src 'self' https://www.gstatic.com 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com;">
+
+    <title>ब्रह्मविद्या</title>
+    
     <script src="filelist.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <style>
-        /* --- STYLES --- */
+        /* जुनीच स्टाईल (काही बदल नाही) */
         :root { --glass: rgba(255,255,255,0.2); --text: #000; }
         body.dark-mode { --glass: rgba(0,0,0,0.6); --text: #fff; }
-        
-        body {
-            margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; color: var(--text);
-            background-size: cover; background-position: center; transition: 0.5s;
-            -webkit-user-select: none; user-select: none; /* No Copy */
-        }
-        
-        body.state-login { background-image: url('login_bg.png'); }
-        body.state-day { background-image: url('day_bg.png'); }
-        body.state-night { background-image: url('night_bg.png'); }
-
-        #login-screen, #library-screen, #reader-screen { position: absolute; width: 100%; height: 100%; }
-        #library-screen, #reader-screen { display: none; }
-
-        /* Login UI */
-        #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.5); }
-        .glass-card { 
-            background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 25px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.3);
-            width: 85%; max-width: 350px; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .shlok { font-size: 13px; font-style: italic; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; margin-bottom: 20px; line-height: 1.5; }
-        input { padding: 12px; border-radius: 30px; border: none; text-align: center; width: 90%; margin-bottom: 15px; font-size: 18px; outline:none; background: rgba(255,255,255,0.9); }
-        .btn { padding: 12px; border-radius: 30px; border: none; background: white; color: black; font-weight: bold; width: 100%; cursor: pointer; }
-        .footer { position: absolute; bottom: 20px; color: rgba(255,255,255,0.8); font-size: 14px; font-weight: bold; text-shadow: 0 1px 3px black; }
-
-        /* Library UI */
-        .header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); }
-        .scroll-area { height: 85%; overflow-y: auto; padding: 15px; }
-        .book-card { background: var(--glass); border-radius: 15px; overflow: hidden; margin-bottom: 15px; animation: fadeInUp 0.5s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Grid View */
-        .grid-view { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .grid-view .book-card { height: 220px; display: flex; } 
-        .grid-view .thumb { width: 100%; height: 100%; object-fit: fill; }
-        .grid-view .title { display: none; }
-
-        /* List View */
-        .list-view { display: flex; flex-direction: column; }
-        .list-view .book-card { height: 80px; display: flex; flex-direction: row; align-items: center; padding: 10px; }
-        .list-view .thumb { width: 60px; height: 80px; object-fit: cover; margin-right: 15px; border-radius: 5px; }
-        .list-view .title { font-weight: bold; font-size: 16px; }
-
-        /* Reader */
-        iframe { width: 100%; height: 93%; border: none; background: white; }
-        .nav { height: 7%; background: #222; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; color: var(--text); background: #333; transition: 0.5s; user-select: none; }
+        body.state-login { background-image: url('login_bg.png'); background-size: cover; }
+        #login-screen, #library-screen { position: absolute; width: 100%; height: 100%; }
+        #library-screen { display: none; }
+        .glass-card { background: rgba(255,255,255,0.9); padding: 25px; border-radius: 20px; text-align: center; width: 80%; margin: 50% auto; }
+        input { padding: 10px; width: 90%; margin: 10px 0; font-size: 18px; }
+        .btn { padding: 10px; width: 100%; background: black; color: white; border: none; font-size: 16px; }
     </style>
 </head>
 <body class="state-login">
 
     <div id="login-screen">
         <div class="glass-card">
-            <h2 style="margin-bottom:15px;">ब्रह्मविद्या कल्पद्रूम</h2>
-            <div class="shlok">
-                श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>
-                भलेतया हातीं नेदावा : अधिकारेंवीण ।।<br><br>
-                हे ज्ञानसुधा गोमटी : जे पान करीति कर्णपुटीं :<br>
-                तयां कहिं नाहिं कामाठी : जन्ममरणाची ।।
-            </div>
+            <h2>ब्रह्मविद्या</h2>
+            <p id="debug-msg" style="color:red; font-size:12px;">App Starting...</p>
+            
             <input type="tel" id="pin" placeholder="PIN टाका" maxlength="8">
             <button class="btn" onclick="performLogin()">प्रवेश करा</button>
         </div>
-        <div class="footer">श्री देवदत्त आश्रम, जाधववाडी</div>
     </div>
 
     <div id="library-screen">
-        <div class="header">
-            <strong>ग्रंथालय</strong>
-            <div>
-                <button class="btn" style="width:auto; padding:5px 10px;" onclick="toggleTheme()">🌗</button>
-                <button class="btn" style="width:auto; padding:5px 10px;" onclick="toggleView()">⊞</button>
-            </div>
-        </div>
-        <div class="scroll-area">
-            <div id="book-container" class="grid-view"></div>
-        </div>
-    </div>
-
-    <div id="reader-screen">
-        <div class="nav">
-            <span onclick="closeBook()" style="font-size:24px;">&#10094;</span>
-            <span id="read-title">Reading</span>
-            <span onclick="closeBook()" style="font-size:24px;">&#127968;</span>
-        </div>
-        <iframe id="frame"></iframe>
+        <h2 style="text-align:center; color:white; margin-top:50px;">ग्रंथालय</h2>
+        <div id="book-container" style="padding:20px; color:white;"></div>
     </div>
 
     <script>
-        // --- SETUP ---
-        var firebaseConfig = { databaseURL: "YOUR_FIREBASE_URL" }; 
-        try { firebase.initializeApp(firebaseConfig); } catch(e){}
-        var db = firebase.database();
+        // --- DEBUGGING START ---
+        // ॲप चालू झाले की लगेच हा अलर्ट येईल
+        alert("App Started! Checking Firebase...");
+
+        var db;
         var deviceId = localStorage.getItem('did') || 'USER_' + Math.floor(Math.random()*10000);
         localStorage.setItem('did', deviceId);
-        
-        // Memory Access (Offline First)
-        var allowedBooks = JSON.parse(localStorage.getItem('my_books')) || {};
 
+        // --- FIREBASE SETUP ---
+        var firebaseConfig = { 
+            databaseURL: "https://brahmvidya-app-default-rtdb.asia-southeast1.firebasedatabase.app/" // <--- इथे तुमची खरी URL टाका!!
+        }; 
+
+        try { 
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            
+            // Firebase कनेक्ट झाले का ते चेक करण्यासाठी
+            db.ref('.info/connected').on('value', function(snap) {
+                if (snap.val() === true) {
+                    document.getElementById('debug-msg').innerText = "Status: Connected ✅";
+                    document.getElementById('debug-msg').style.color = "green";
+                } else {
+                    document.getElementById('debug-msg').innerText = "Status: Offline ❌";
+                }
+            });
+            
+        } catch(e) { 
+            alert("Firebase Error: " + e.message);
+            document.getElementById('debug-msg').innerText = "Error: " + e.message;
+        }
+
+        // --- LOGIN LOGIC ---
         function performLogin() {
-            if(document.getElementById('pin').value === "92252320") {
+            var pin = document.getElementById('pin').value;
+            if(pin === "92252320") {
+                alert("Login Success! ID: " + deviceId);
+                
+                // 1. Firebase वर नाव पाठवा (Admin साठी)
+                if(navigator.onLine) {
+                    db.ref('users/' + deviceId).update({ 
+                        last_login: new Date().toISOString(),
+                        device_name: "Android Device"
+                    }).then(() => {
+                        alert("Data sent to Admin Panel!");
+                    }).catch(err => {
+                        alert("Send Error: " + err.message);
+                    });
+                }
+                
+                // 2. स्क्रीन बदला
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('library-screen').style.display = 'block';
                 
-                var theme = localStorage.getItem('theme') || 'light';
-                if(theme === 'dark') document.body.classList.add('dark-mode');
-                updateBg();
-                
-                loadBooks();
-                syncInBackground(); // Silent Update
-            } else { alert("चुकीचा पिन!"); }
-        }
-
-        function syncInBackground() {
-            if(navigator.onLine) {
-                db.ref('users/'+deviceId).update({ last_login: new Date().toISOString() });
-                if(typeof autoBookList !== 'undefined') db.ref('library_catalog').set(autoBookList);
-                
-                db.ref('users/'+deviceId+'/access').once('value', snap => {
-                    var newAccess = snap.val();
-                    if(newAccess) {
-                        localStorage.setItem('my_books', JSON.stringify(newAccess));
-                        allowedBooks = newAccess;
-                        loadBooks();
-                    }
-                });
+            } else {
+                alert("Wrong PIN");
             }
         }
-
-        function loadBooks() {
-            var container = document.getElementById('book-container');
-            container.innerHTML = "";
-            if(typeof autoBookList === 'undefined') return;
-            
-            var count = 0;
-            autoBookList.forEach(book => {
-                if(allowedBooks[book.name]) {
-                    count++;
-                    var div = document.createElement('div');
-                    div.className = "book-card";
-                    var img = book.image ? `<img src="${book.image}" class="thumb">` : '';
-                    div.innerHTML = `${img}<div class="title">${book.name}</div>`;
-                    div.onclick = () => openReader(book.file, book.name);
-                    container.appendChild(div);
-                }
-            });
-            if(count === 0) container.innerHTML = "<p style='text-align:center; padding-top:50px; opacity:0.7'>अजून कोणताही ग्रंथ नाही.</p>";
-        }
-
-        function openReader(file, title) {
-            document.getElementById('library-screen').style.display = 'none';
-            document.getElementById('reader-screen').style.display = 'block';
-            document.getElementById('frame').src = file;
-            document.getElementById('read-title').innerText = title;
-        }
-
-        function toggleTheme() { 
-            document.body.classList.toggle('dark-mode'); 
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode')?'dark':'light');
-            updateBg(); 
-        }
-        function toggleView() { 
-            var c = document.getElementById('book-container');
-            c.classList.toggle('grid-view'); c.classList.toggle('list-view');
-        }
-        function updateBg() {
-            document.body.className = document.body.classList.contains('dark-mode')?'state-night':'state-day';
-        }
-        function closeBook() {
-            document.getElementById('reader-screen').style.display = 'none';
-            document.getElementById('library-screen').style.display = 'block';
-            document.getElementById('frame').src = "";
-        }
-        document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
 </html>
