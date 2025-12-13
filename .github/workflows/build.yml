@@ -1,4 +1,4 @@
-name: Build Brahmavidya App
+name: Build Brahmavidya Final
 on: [push]
 jobs:
   build:
@@ -14,28 +14,29 @@ jobs:
           cordova create myapp com.bk.app "Brahmavidya"
           cd myapp
           
-          # Plugins (Security & Network)
-          cordova plugin add cordova-plugin-privacy-screen
+          # --- FIX: प्लगइनची लिंक बदलली आहे (Direct GitHub Link) ---
+          cordova plugin add https://github.com/miki325/cordova-plugin-privacy-screen.git
           cordova plugin add cordova-plugin-network-information
+          
           cordova platform add android
           
-          # Clean Permissions
+          # परवानग्या कमी करणे
           sed -i '/<preference name="Permissions"/d' config.xml
           cd ..
           
-          # Auto-Detect Logic (Generates filelist.js)
-          cd myapp/www
-          echo "var autoBookList = [" > filelist.js
-          # Go back to root to find files
-          cd ../..
-          
-          # Copy Files Logic
+          # फाईल्स कॉपी करणे
           cp *.html myapp/www/
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
           cp index.html myapp/www/
           
-          # Generate List
+          # ऑटोमॅटिक लिस्ट बनवणे
+          cd myapp/www
+          echo "var autoBookList = [" > filelist.js
+          # फाईल्स शोधण्यासाठी रूटवर परत जा
+          cd ../..
+          
+          # लिस्ट जनरेट करा
           cd myapp/www
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
@@ -49,10 +50,10 @@ jobs:
           echo "];" >> filelist.js
           cd ../..
           
-          # Build APK
+          # APK बिल्ड करणे
           cd myapp
           cordova build android --debug
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-APK
+          name: Brahmavidya-Fixed-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
