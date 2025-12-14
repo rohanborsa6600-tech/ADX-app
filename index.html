@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:; font-src 'self' data:; frame-src 'self' gap:; script-src 'self' https://www.gstatic.com 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebaseio.com wss://*.firebasedatabase.app;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src * 'self' data: content:; font-src 'self' data:; frame-src 'self' gap:; script-src 'self' https://www.gstatic.com 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app wss://*.firebaseio.com wss://*.firebasedatabase.app;">
 
     <title>ब्रह्मविद्या</title>
     
@@ -14,125 +14,84 @@
     <script src="cordova.js"></script>
     
     <style>
-        /* --- LIQUID GLASS THEME --- */
-        :root {
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            --text-color: #ffffff;
+        /* --- THEME --- */
+        :root { --glass-bg: rgba(255, 255, 255, 0.1); --glass-border: rgba(255, 255, 255, 0.2); }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; background: #000; color: white; -webkit-user-select: none; user-select: none; }
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            background-image: url('login_bg.png'); /* तुमचे नवीन बॅकग्राउंड */
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: absolute; width: 100%; height: 100%; z-index: 10;
+        }
+        .login-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: -1; }
+
+        .glass-card {
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 30px; border-radius: 20px; text-align: center;
+            border: 1px solid var(--glass-border); width: 85%; max-width: 350px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.5);
         }
 
-        body {
-            margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden;
-            background: #0f0c29; /* Dark Base */
-            color: var(--text-color);
-            -webkit-user-select: none; user-select: none;
-        }
-
-        /* --- LIQUID BACKGROUND ANIMATION --- */
-        .liquid-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
-            z-index: -2;
-        }
+        .app-title { font-size: 28px; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 5px black; color: white; }
         
-        .blob {
-            position: absolute; filter: blur(40px); opacity: 0.6; z-index: -1;
-            animation: moveBlob 10s infinite alternate;
-        }
-        .blob-1 { top: 10%; left: 10%; width: 200px; height: 200px; background: #ff00cc; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
-        .blob-2 { bottom: 20%; right: 10%; width: 250px; height: 250px; background: #3333ff; border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; animation-duration: 15s; }
-        .blob-3 { top: 40%; left: 50%; width: 150px; height: 150px; background: #00ffff; border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation-duration: 12s; }
-
-        @keyframes moveBlob {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(20px, 40px) rotate(20deg); }
-        }
-
-        #login-screen, #library-screen, #reader-screen { position: absolute; width: 100%; height: 100%; display: none; }
-
-        /* --- GLASS CARDS --- */
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--glass-shadow);
-            border-radius: 20px;
+        /* --- ही आहे तुमची तारीख (Updated Style) --- */
+        .since-text {
+            font-size: 14px; 
+            color: #ffd700; /* सोन्याचा रंग (Gold) */
+            margin-bottom: 20px; 
+            font-weight: 600; 
+            letter-spacing: 2px; 
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            display: inline-block;
+            padding-bottom: 5px;
         }
 
-        /* LOGIN SCREEN */
-        #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .login-card { padding: 30px; width: 80%; max-width: 350px; text-align: center; }
-        
-        .title-text { font-size: 28px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        
         .shlok-box {
-            font-size: 13px; font-style: italic; color: #ffd700; margin-bottom: 20px;
-            background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px;
+            font-size: 13px; font-style: italic; color: #fff; margin-bottom: 20px;
+            background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1); line-height: 1.5;
         }
 
         input {
-            width: 90%; padding: 12px; margin: 15px 0;
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 25px; color: white; text-align: center; font-size: 18px; outline: none;
-            transition: 0.3s;
+            width: 90%; padding: 12px; margin: 15px 0; background: rgba(255,255,255,0.9); border: none;
+            border-radius: 30px; color: #000; text-align: center; font-size: 18px; outline: none; font-weight: bold;
         }
-        input:focus { background: rgba(255,255,255,0.2); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-
+        
         .btn-liquid {
-            width: 100%; padding: 12px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1));
-            border: 1px solid rgba(255,255,255,0.3); border-radius: 25px;
-            color: white; font-weight: bold; font-size: 16px; cursor: pointer;
-            backdrop-filter: blur(4px); transition: 0.3s;
-        }
-        .btn-liquid:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
-
-        /* LIBRARY SCREEN */
-        .header {
-            padding: 20px; padding-top: 40px; display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            width: 100%; padding: 12px; background: linear-gradient(135deg, #ffffff, #dcdcdc);
+            border: none; border-radius: 30px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer;
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
         }
 
-        .scroll-area { height: 85vh; overflow-y: auto; padding: 20px; }
-        .grid-view { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-bottom: 50px; }
+        .footer { position: absolute; bottom: 20px; font-size: 12px; opacity: 0.8; letter-spacing: 1px; text-shadow: 0 1px 2px black; }
 
-        .book-card {
-            height: 240px; border-radius: 15px; overflow: hidden; position: relative;
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            transition: 0.3s;
-        }
+        /* --- LIBRARY SCREEN --- */
+        #library-screen { display: none; position: absolute; width: 100%; height: 100%; background: #111; }
+        .header { padding: 15px; padding-top: 40px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .grid-view { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; overflow-y: auto; height: 85vh; }
+        .book-card { background: rgba(255,255,255,0.05); border-radius: 15px; overflow: hidden; height: 240px; position: relative; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
         .book-card:active { transform: scale(0.96); }
-        
         .thumb { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
-        
-        .book-title {
-            position: absolute; bottom: 0; width: 100%; padding: 10px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-            text-align: center; font-size: 14px; font-weight: 500;
-        }
+        .book-title { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); padding: 10px; text-align: center; font-size: 13px; font-weight: 500; }
 
-        /* READER SCREEN */
-        .reader-nav {
-            height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
-            background: #111; color: white; border-bottom: 1px solid #333;
-        }
-        .close-btn { font-size: 20px; padding: 10px; cursor: pointer; }
-        
+        /* --- READER SCREEN --- */
+        #reader-screen { display: none; position: absolute; width: 100%; height: 100%; background: #000; }
+        .reader-nav { height: 60px; background: #111; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
         iframe { width: 100%; height: calc(100% - 60px); border: none; background: white; }
     </style>
 </head>
 <body>
 
-    <div class="liquid-bg"></div>
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
-
-    <div id="login-screen" style="display:flex;">
-        <div class="glass-panel login-card">
-            <div class="title-text">ब्रह्मविद्या कल्पद्रूम</div>
+    <div id="login-screen">
+        <div class="login-overlay"></div>
+        <div class="glass-card">
+            <div class="app-title">ब्रह्मविद्या कल्पद्रूम</div>
+            
+            <div class="since-text">Since 2 January 2026</div>
             
             <div class="shlok-box">
                 "श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>
@@ -142,76 +101,73 @@
             <input type="tel" id="pin" placeholder="PIN टाका" maxlength="8">
             <button class="btn-liquid" onclick="performLogin()">प्रवेश करा</button>
         </div>
-        
-        <div style="position:absolute; bottom:20px; font-size:12px; opacity:0.6;">|| श्री देवदत्त आश्रम, जाधववाडी ||</div>
+        <div class="footer">|| श्री देवदत्त आश्रम, जाधववाडी ||</div>
     </div>
 
     <div id="library-screen">
         <div class="header">
             <span style="font-size:22px; font-weight:bold;">ग्रंथालय</span>
-            <div style="width:30px; height:30px; background:rgba(255,255,255,0.2); border-radius:50%;"></div> </div>
-        <div class="scroll-area">
-            <div id="book-container" class="grid-view"></div>
+            <div style="display:flex; align-items:center;">
+                <div style="width:8px; height:8px; background:#0f0; border-radius:50%; margin-right:5px; box-shadow:0 0 5px #0f0;"></div>
+                <small style="color:#aaa;">Online</small>
+            </div>
         </div>
+        <div class="grid-view" id="book-container"></div>
     </div>
 
     <div id="reader-screen">
         <div class="reader-nav">
-            <span class="close-btn" onclick="closeBook()">&#10094; Back</span>
-            <span id="read-title">Reading</span>
-            <span></span>
+            <span onclick="closeBook()" style="color:white; font-size:24px; cursor:pointer;">&#10094; Back</span>
+            <span id="read-title" style="color:white; font-size:14px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Reading</span>
+            <span style="width:24px;"></span>
         </div>
         <iframe id="frame" src=""></iframe>
     </div>
 
     <script>
-        // 1. BACK BUTTON HANDLING
-        document.addEventListener("deviceready", onDeviceReady, false);
-        function onDeviceReady() {
-            if(window.StatusBar) {
-                window.StatusBar.styleLightContent(); // Status bar text white
-                window.StatusBar.backgroundColorByHexString("#00000000"); // Transparent
-            }
+        // 1. DEVICE READY (Full Screen & Back Button)
+        document.addEventListener("deviceready", function() {
+            if(window.StatusBar) window.StatusBar.hide();
             document.addEventListener("backbutton", function(e){
                 e.preventDefault();
-                if(document.getElementById('reader-screen').style.display === 'block'){
-                    closeBook();
-                } else {
-                    navigator.app.exitApp();
-                }
+                if(document.getElementById('reader-screen').style.display === 'block') closeBook();
+                else navigator.app.exitApp();
             }, false);
-        }
+        }, false);
 
-        // 2. CONFIG
-        var firebaseConfig = { 
-            databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app"
-        };
+        // 2. FIREBASE CONFIG
+        var firebaseConfig = { databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app" };
         try { firebase.initializeApp(firebaseConfig); var db = firebase.database(); } catch(e){}
         
         var deviceId = localStorage.getItem('did') || 'USER_' + Math.floor(Math.random()*10000);
         localStorage.setItem('did', deviceId);
         var allowedBooks = JSON.parse(localStorage.getItem('my_allowed_books')) || {};
 
-        // 3. LOGIN LOGIC
+        // 3. LOGIN & LOGIC
         function performLogin() {
             var pin = document.getElementById('pin').value;
             if(pin === "92252320") {
-                // Device Name Detection
-                var modelName = "Android Device";
+                var modelName = "Android Mobile";
                 try {
                    var match = navigator.userAgent.match(/Android.*?;(.*?)\)/);
                    if (match && match[1]) modelName = match[1].trim();
                 } catch(e) {}
 
                 if(navigator.onLine) {
-                    db.ref('users/' + deviceId).update({ last_login: new Date().toISOString(), device_name: modelName });
+                    var userRef = db.ref('users/' + deviceId);
+                    db.ref('.info/connected').on('value', function(snap) {
+                        if (snap.val() === true) {
+                            userRef.onDisconnect().update({ isOnline: false });
+                            userRef.update({ isOnline: true, last_login: new Date().toISOString(), device_name: modelName });
+                        }
+                    });
                     if(typeof autoBookList !== 'undefined') db.ref('library_catalog').set(autoBookList);
                 }
 
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('library-screen').style.display = 'block';
                 
-                // Real-time Listener (Instant Revoke)
+                // Realtime Permission Sync
                 db.ref('users/' + deviceId + '/access').on('value', snap => {
                     var newAccess = snap.val();
                     allowedBooks = newAccess ? newAccess : {};
@@ -234,23 +190,18 @@
                 if (allowedBooks[book.name]) {
                     count++;
                     var div = document.createElement('div');
-                    div.className = "book-card glass-panel"; // Glass effect added
+                    div.className = "book-card";
                     
                     var imgHTML = book.image 
                         ? `<img src="${book.image}" class="thumb" onerror="this.style.display='none'">` 
-                        : `<div class="thumb" style="display:flex; justify-content:center; align-items:center; opacity:0.5;">No Cover</div>`;
+                        : `<div class="thumb" style="display:flex; justify-content:center; align-items:center; color:#777; font-size:12px;">No Cover</div>`;
                     
                     div.innerHTML = `${imgHTML}<div class="book-title">${book.name}</div>`;
-                    
-                    div.onclick = function() { 
-                        if(allowedBooks[book.name]) openReader(book.file, book.name);
-                        else loadBooks(); // If revoked instantly
-                    };
+                    div.onclick = function() { if(allowedBooks[book.name]) openReader(book.file, book.name); };
                     container.appendChild(div);
                 }
             });
-
-            if(count === 0) container.innerHTML = "<p style='text-align:center; padding-top:50px; opacity:0.7;'>No books available.</p>";
+            if(count === 0) container.innerHTML = "<p style='text-align:center; padding-top:50px; color:#aaa; grid-column:span 2;'>कृपया ॲडमिनशी संपर्क साधा.</p>";
         }
 
         function openReader(file, title) {
@@ -259,7 +210,6 @@
             document.getElementById('frame').src = file;
             document.getElementById('read-title').innerText = title;
         }
-
         function closeBook() {
             document.getElementById('reader-screen').style.display = 'none';
             document.getElementById('library-screen').style.display = 'block';
