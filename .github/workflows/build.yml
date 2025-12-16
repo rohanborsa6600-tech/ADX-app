@@ -1,4 +1,4 @@
-name: Build Brahmavidya Auto-Logo
+name: Build Brahmavidya Final-Auto-Images
 
 on:
   push:
@@ -15,14 +15,28 @@ jobs:
       - uses: actions/setup-java@v3
         with: { distribution: 'temurin', java-version: '17' }
       
-      # --- 🔥 जादुई स्टेप: इंटरनेटवरून पुस्तकाचा लोगो घेणे 🔥 ---
-      - name: Download Auto Book Logo
+      # --- 🔥 जादुई स्टेप: सर्व फोटो इंटरनेटवरून घेणे 🔥 ---
+      - name: Download ALL Auto Images
         run: |
-          echo "Downloading a book icon from internet..."
-          # हा एक छान निळ्या पुस्तकाचा आयकॉन आहे
+          echo "Downloading all assets to fix empty file errors..."
+          
+          # 1. Logo (Book Icon)
           wget -O logo.png "https://cdn-icons-png.flaticon.com/512/2232/2232688.png"
-          # साईज चेक करूया (ती KB मध्ये असेल)
-          ls -lh logo.png
+          
+          # 2. Login Background (Dark Spiritual/Galaxy)
+          wget -O login_bg.png "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80"
+          
+          # 3. Default Book Cover (Old Texture)
+          wget -O cover.jpg "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+          
+          # 4. Photo 1 (About Us - Top)
+          wget -O photo1.jpg "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+          
+          # 5. Photo 2 (About Us - Bottom)
+          wget -O photo2.jpg "https://images.unsplash.com/photo-1528360983277-13d9b152c6d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+          
+          # फाईल साईज चेक करणे (खात्रीसाठी)
+          ls -lh *.png *.jpg
       # -----------------------------------------------------
 
       - name: Create Project & Config
@@ -36,9 +50,8 @@ jobs:
           cordova plugin add cordova-plugin-whitelist
           cordova platform add android
           
-          # Settings
-          # इथे आपण वर डाउनलोड केलेला लोगो वापरत आहोत
-          sed -i '/<widget/a <icon src="../logo.png" />' config.xml
+          # Settings (Using downloaded logo)
+          sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
           sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
@@ -55,7 +68,8 @@ jobs:
           cp *.html myapp/www/ || true
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
-          # इथे आपण डाउनलोड केलेले फोटो कॉपी करत आहोत
+          
+          # Copy Downloaded Images to www folder
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
           cp *.jpeg myapp/www/ || true
@@ -83,5 +97,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-AutoLogo-APK
+          name: Brahmavidya-Final-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
