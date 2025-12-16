@@ -1,5 +1,9 @@
 name: Build Brahmavidya Final
-on: [push]
+
+on:
+  push:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,61 +14,55 @@ jobs:
       - run: npm install -g cordova
       - uses: actions/setup-java@v3
         with: { distribution: 'temurin', java-version: '17' }
-      - run: |
-          cordova create myapp com.bk.app "Brahmavidya"
+      
+      - name: Create Project & Config
+        run: |
+          cordova create myapp com.brahmavidya.ovi "Brahmavidya"
           cd myapp
-          
-          # 1. PLUGINS (Full Screen & Network)
-          cordova plugin add cordova-plugin-network-information
           cordova plugin add cordova-plugin-statusbar
-          
+          cordova plugin add cordova-plugin-network-information
+          cordova plugin add cordova-plugin-whitelist
           cordova platform add android
           
-          # 2. APP ICON SETTING (तुमचा लोगो आयकॉन म्हणून सेट करा)
+          # Settings
           sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
-
-          # 3. FULL SCREEN & ORIENTATION SETTINGS
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
           sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
-          
-          # Clean Permissions
-          sed -i '/<preference name="Permissions"/d' config.xml
+          sed -i '/<widget/a <preference name="BackgroundColor" value="0xff000000" />' config.xml
           cd ..
-          
-          # 4. COPY FILES (Logo & Background सोबत)
-          cp *.html myapp/www/
-          cp logo.png myapp/www/ || true
-          cp login_bg.png myapp/www/ || true
+
+      - name: Copy Files & Generate Smart List
+        run: |
+          rm myapp/www/index.html myapp/www/css/index.css myapp/www/js/index.js
+          cp index.html myapp/www/
+          cp *.html myapp/www/ || true
+          cp *.css myapp/www/ || true
+          cp *.js myapp/www/ || true
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
           cp *.jpeg myapp/www/ || true
-          cp index.html myapp/www/
           
-          # 5. SMART FILE LIST (सर्व प्रकारच्या इमेजेस शोधण्यासाठी)
           cd myapp/www
           echo "var autoBookList = [" > filelist.js
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
               baseName=$(basename "$f" .html)
-              img=""
-              # Check extensions
-              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg";
-              elif [ -f "$baseName.JPG" ]; then img="$baseName.JPG";
-              elif [ -f "$baseName.png" ]; then img="$baseName.png";
-              elif [ -f "$baseName.PNG" ]; then img="$baseName.PNG";
-              elif [ -f "$baseName.jpeg" ]; then img="$baseName.jpeg";
-              fi
+              img="cover.jpg"
+              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
+              if [ -f "$baseName.png" ]; then img="$baseName.png"; fi
               echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
             fi
           done
           echo "];" >> filelist.js
           cd ../..
-          
-          # 6. BUILD APK
+
+      - name: Build APK
+        run: |
           cd myapp
           cordova build android --debug
+          
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-APK
+          name: Brahmavidya-Ovi-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
