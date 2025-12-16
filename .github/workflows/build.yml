@@ -1,4 +1,4 @@
-name: Build Brahmavidya Final
+name: Build Brahmavidya Auto-Logo
 
 on:
   push:
@@ -15,17 +15,30 @@ jobs:
       - uses: actions/setup-java@v3
         with: { distribution: 'temurin', java-version: '17' }
       
+      # --- 🔥 जादुई स्टेप: इंटरनेटवरून पुस्तकाचा लोगो घेणे 🔥 ---
+      - name: Download Auto Book Logo
+        run: |
+          echo "Downloading a book icon from internet..."
+          # हा एक छान निळ्या पुस्तकाचा आयकॉन आहे
+          wget -O logo.png "https://cdn-icons-png.flaticon.com/512/2232/2232688.png"
+          # साईज चेक करूया (ती KB मध्ये असेल)
+          ls -lh logo.png
+      # -----------------------------------------------------
+
       - name: Create Project & Config
         run: |
           cordova create myapp com.brahmavidya.ovi "Brahmavidya"
           cd myapp
+          # Plugins
           cordova plugin add cordova-plugin-statusbar
           cordova plugin add cordova-plugin-network-information
+          cordova plugin add cordova-plugin-device
           cordova plugin add cordova-plugin-whitelist
           cordova platform add android
           
           # Settings
-          sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
+          # इथे आपण वर डाउनलोड केलेला लोगो वापरत आहोत
+          sed -i '/<widget/a <icon src="../logo.png" />' config.xml
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
           sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
@@ -34,15 +47,20 @@ jobs:
 
       - name: Copy Files & Generate Smart List
         run: |
+          # Clean default files
           rm myapp/www/index.html myapp/www/css/index.css myapp/www/js/index.js
+          
+          # Copy your files
           cp index.html myapp/www/
           cp *.html myapp/www/ || true
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
+          # इथे आपण डाउनलोड केलेले फोटो कॉपी करत आहोत
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
           cp *.jpeg myapp/www/ || true
           
+          # Generate filelist.js
           cd myapp/www
           echo "var autoBookList = [" > filelist.js
           for f in *.html; do
@@ -51,6 +69,7 @@ jobs:
               img="cover.jpg"
               if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
               if [ -f "$baseName.png" ]; then img="$baseName.png"; fi
+              
               echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
             fi
           done
@@ -64,5 +83,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Ovi-APK
+          name: Brahmavidya-AutoLogo-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
