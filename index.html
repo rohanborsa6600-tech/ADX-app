@@ -3,322 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ब्रह्मविद्या कल्पद्रूम</title>
+    <title>ब्रह्मविद्या</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="cordova.js"></script>
-    <script src="filelist.js"></script>
+    <script src="filelist.js"></script> <style>
+        /* --- CRYSTAL CLEAR LIQUID UI --- */
+        :root { --neon: #00f3ff; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.15); }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; overflow: hidden; user-select: none; }
+        
+        /* Background Animation */
+        .bg-anim { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, #000000, #1a0b2e, #0f1c2e); background-size: 400% 400%; animation: bgMove 15s infinite; z-index: -1; }
+        @keyframes bgMove { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
 
-    <style>
-        /* --- LIQUID GLASS THEME --- */
-        :root { --neon: #00f3ff; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.1); --border: rgba(255, 255, 255, 0.2); }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #050505; color: white; overflow: hidden; user-select: none; }
+        .screen { display: none; position: absolute; width: 100%; height: 100%; flex-direction: column; }
+        .active { display: flex; }
 
-        /* SCREENS */
-        .screen { display: none; position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
-        .active { display: flex; flex-direction: column; }
-
-        /* 1. LOGIN SCREEN */
-        #login-screen {
-            background: url('login_bg.png') no-repeat center center/cover;
-            justify-content: center; align-items: center; z-index: 200;
+        /* Login */
+        #login-screen { justify-content: center; align-items: center; background: url('login_bg.png') center/cover; }
+        .crystal-card {
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 30px; width: 80%; max-width: 350px;
+            text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.1);
         }
-        .glass-panel {
-            background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--border); border-radius: 20px; padding: 30px; width: 85%; max-width: 350px;
-            text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        input { width: 90%; padding: 12px; margin: 10px 0; background: rgba(0,0,0,0.6); border: 1px solid #555; border-radius: 10px; color: white; text-align: center; font-size: 16px; }
+        .btn-liquid {
+            width: 100%; padding: 12px; margin-top: 15px; background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255,255,255,0.4); border-radius: 10px; color: var(--gold); font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.3s;
         }
-        input {
-            width: 90%; padding: 12px; margin: 10px 0; background: rgba(0,0,0,0.5); border: 1px solid var(--border);
-            border-radius: 10px; color: white; text-align: center; font-size: 16px; outline: none;
-        }
-        .btn-glow {
-            width: 100%; padding: 12px; margin-top: 15px; background: linear-gradient(90deg, #00c6ff, #0072ff);
-            border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px;
-            box-shadow: 0 0 15px rgba(0, 114, 255, 0.5);
-        }
-
-        /* 2. HOME SCREEN */
-        #home-screen { background: radial-gradient(circle at center, #1a1a2e, #000); }
-        .header {
-            padding: 15px; padding-top: 50px; display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
-        }
+        .btn-liquid:active { transform: scale(0.95); box-shadow: 0 0 20px var(--gold); }
+        
+        /* Home */
+        .header { padding: 40px 20px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
+        .user-name-style { font-size: 24px; font-weight: bold; background: linear-gradient(to right, #fff, var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        
+        .cat-bar { display: flex; overflow-x: auto; padding: 10px; gap: 10px; }
+        .cat-chip { padding: 5px 15px; background: rgba(255,255,255,0.1); border-radius: 20px; font-size: 12px; white-space: nowrap; border: 1px solid transparent; }
+        .cat-chip.sel { border-color: var(--neon); color: var(--neon); background: rgba(0, 243, 255, 0.1); }
+        
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; overflow-y: auto; padding-bottom: 100px; }
-        
-        /* BOOK CARD */
         .book-card {
-            background: var(--glass); border-radius: 15px; overflow: hidden; position: relative; height: 220px;
-            border: 1px solid var(--border); transition: transform 0.2s;
+            background: rgba(255,255,255,0.05); border-radius: 15px; position: relative; height: 230px;
+            border: 1px solid rgba(255,255,255,0.1); overflow: hidden; transition: 0.3s;
         }
-        .book-card:active { transform: scale(0.95); }
-        .book-cover { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
-        .pin-icon { position: absolute; top: 5px; right: 5px; font-size: 18px; color: gold; display: none; }
+        .book-cover { width: 100%; height: 80%; object-fit: cover; opacity: 0.9; }
+        .progress-line { height: 4px; background: #333; width: 100%; position: absolute; bottom: 35px; }
+        .progress-fill { height: 100%; background: #0f0; width: 0%; box-shadow: 0 0 5px #0f0; }
+        .pin-icon { position: absolute; top: 5px; right: 5px; font-size: 18px; filter: drop-shadow(0 0 5px black); }
 
-        /* 3. MODALS (Settings, About, Feedback) */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300;
-            display: none; flex-direction: column; padding-top: 50px;
-        }
-        .modal-content {
-            background: #111; height: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px;
-            padding: 20px; overflow-y: auto; border-top: 1px solid var(--neon);
-        }
-        .setting-item { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: white; }
-        
-        /* ABOUT US STYLING */
-        .about-text { text-align: justify; font-size: 14px; line-height: 1.6; color: #ddd; }
-        .highlight { color: var(--gold); font-weight: bold; }
-        .sub-title { color: var(--neon); margin-top: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-
-        /* 4. READER */
+        /* Reader & Modals */
         #reader-screen { background: white; z-index: 100; }
-        .search-bar {
-            position: absolute; bottom: 0; width: 100%; background: #222; padding: 10px; display: none;
-            justify-content: center; align-items: center; gap: 10px;
-        }
+        .search-overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: #222; display: none; gap: 10px; justify-content: center; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; display: none; flex-direction: column; }
+        .modal-content { padding: 20px; overflow-y: auto; height: 100%; }
         
-        /* OVI (Waiting State) */
-        #waiting-state {
-            display: none; flex-direction: column; justify-content: center; align-items: center; height: 80vh; text-align: center; padding: 20px;
-        }
-        .ovi-text { color: var(--gold); font-style: italic; font-size: 18px; line-height: 1.6; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-
+        /* About Text Styles */
+        .about-text p { margin-bottom: 15px; line-height: 1.7; color: #ddd; text-align: justify; font-size: 15px; }
+        .gold-txt { color: var(--gold); font-weight: bold; text-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+        .cyan-txt { color: var(--neon); font-weight: bold; text-shadow: 0 0 5px rgba(0, 243, 255, 0.3); }
+        .quote-box { background: rgba(255,215,0,0.05); padding: 15px; border-left: 3px solid var(--gold); margin: 20px 0; font-style: italic; color: var(--gold); }
     </style>
 </head>
 <body>
+    <div class="bg-anim"></div>
 
     <div id="login-screen" class="screen active">
-        <div class="glass-panel">
-            <h2 style="margin:0; text-shadow:0 0 10px cyan;">ब्रह्मविद्या</h2>
-            <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Since 2 Jan 2026</p>
-            
+        <div class="crystal-card">
+            <h2 class="user-name-style">ब्रह्मविद्या</h2>
+            <p style="color:#aaa; font-size:12px;">Since 2 Jan 2026</p>
+            <div style="font-style:italic; font-size:12px; margin:15px 0; color:#ddd;">
+                "श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>भलेतया हातीं नेदावा : अधिकारेंवीण ।।"
+            </div>
             <input type="text" id="u_name" placeholder="तुमचे नाव (Name)">
-            <input type="tel" id="u_pin" placeholder="पिन (PIN)" maxlength="6">
-            <button class="btn-glow" onclick="doLogin()">प्रवेश करा</button>
+            <input type="tel" id="u_pin" placeholder="PIN" maxlength="6">
+            <button class="btn-liquid" onclick="doLogin()">प्रवेश करा</button>
         </div>
     </div>
 
     <div id="home-screen" class="screen">
         <div class="header">
-            <span id="welcome-text" style="font-weight:bold;">श्री दत्त समर्थ</span>
-            <span onclick="openSettings()" style="font-size:24px;">⚙️</span>
+            <div class="user-name-style" id="disp-name">User</div>
+            <div style="display:flex; gap:15px;">
+                <span onclick="openSettings()" style="font-size:20px;">⚙️</span>
+            </div>
+        </div>
+        
+        <div class="cat-bar" id="cat-container">
+            <div class="cat-chip sel" onclick="filterCat('All')">All</div>
+            <div class="cat-chip" onclick="filterCat('Pinned')">📌 Pinned</div>
         </div>
 
-        <div id="waiting-state">
-            <p class="ovi-text">
-                "श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>
-                भलेतया हातीं नेदावा : अधिकारेंवीण ।।"
-            </p>
-            <p style="color:#666; font-size:12px; margin-top:20px;">(कृपाप्रसादाची वाट पहा...)</p>
+        <div id="waiting" style="display:none; text-align:center; margin-top:50px; padding:20px;">
+            <p style="color:var(--gold); font-style:italic; font-size:18px;">"WAIT FOR ADMIN PERMISSION..."</p>
         </div>
-
-        <div id="book-grid" class="grid"></div>
+        <div class="grid" id="book-grid"></div>
     </div>
 
     <div id="reader-screen" class="screen">
-        <div style="height:50px; background:#111; display:flex; align-items:center; padding:0 15px; justify-content:space-between;">
-            <span onclick="closeReader()" style="color:white; font-size:24px;">&#10094;</span>
-            <span id="book-title-disp" style="color:white; font-size:14px;">Reading</span>
-            <span onclick="toggleSearch()" style="color:white; font-size:20px;">🔍</span>
-        </div>
-        <iframe id="book-frame" style="width:100%; height:calc(100% - 110px); border:none;"></iframe>
-        <div id="search-bar" class="search-bar">
-            <input type="text" id="search-input" placeholder="शोध..." style="width:70%; color:white;">
-            <button onclick="performSearch()" style="background:gold; border:none; padding:8px 15px; border-radius:5px;">Go</button>
-        </div>
-    </div>
-
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color:var(--neon); border-bottom:1px solid var(--neon);">सेटिंग्ज</h2>
-            <div class="setting-item" onclick="showAbout()"><span>ℹ️ आमच्याबद्दल (About Us)</span><span>&#10095;</span></div>
-            <div class="setting-item" onclick="showProfile()"><span>👤 प्रोफाईल (Profile)</span><span>&#10095;</span></div>
-            <div class="setting-item" onclick="showHelp()"><span>❓ मदत (Help)</span><span>&#10095;</span></div>
-            <div class="setting-item" onclick="showFeedback()"><span>💬 फीडबॅक (Feedback)</span><span>&#10095;</span></div>
-            
-            <div style="margin-top:20px; padding:15px; background:#222; border-radius:10px;">
-                <p style="margin:0; font-size:12px; color:#aaa;">प्रगती (Progress)</p>
-                <div style="width:100%; height:5px; background:#444; margin-top:5px; border-radius:5px;">
-                    <div id="progress-bar" style="width:0%; height:100%; background:var(--neon); border-radius:5px;"></div>
-                </div>
+        <div style="height:50px; background:#111; display:flex; align-items:center; justify-content:space-between; padding:0 15px;">
+            <span onclick="closeReader()" style="color:white; font-size:24px;">←</span>
+            <span id="reader-title" style="color:white; font-size:14px;">Book</span>
+            <div style="display:flex; gap:15px;">
+                <span onclick="changeFont(1)" style="font-size:18px;">A+</span>
+                <span onclick="changeFont(-1)" style="font-size:14px;">A-</span>
+                <span onclick="toggleSearch()" style="font-size:18px;">🔍</span>
             </div>
-            <button onclick="document.getElementById('settings-modal').style.display='none'" style="width:100%; padding:15px; background:#333; color:white; border:none; margin-top:30px;">बंद करा</button>
+        </div>
+        <iframe id="book-frame" style="width:100%; height:calc(100% - 100px); border:none; background:white;"></iframe>
+        <div id="search-box" class="search-overlay">
+            <input type="text" id="search-txt" placeholder="Search..." style="width:60%;">
+            <button onclick="doSearch()" style="padding:5px 15px;">Go</button>
         </div>
     </div>
 
-    <div id="content-modal" class="modal" style="z-index:400;">
-        <div class="modal-content" id="dynamic-content"></div>
+    <div id="modal-box" class="modal">
+        <div class="modal-content" id="modal-body"></div>
+        <button onclick="document.getElementById('modal-box').style.display='none'" style="padding:15px; background:#333; color:white; border:none; width:100%;">Close</button>
     </div>
 
     <script>
-        // --- CONFIG ---
         const firebaseConfig = { databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app" };
         try { firebase.initializeApp(firebaseConfig); var db = firebase.database(); } catch(e){}
+        
+        let did = localStorage.getItem('did') || 'U_' + Math.floor(Math.random()*10000); localStorage.setItem('did', did);
+        let pinned = JSON.parse(localStorage.getItem('pins')) || [];
+        let currentFilter = 'All';
 
-        let deviceId = localStorage.getItem('did') || 'ID_' + Math.floor(Math.random()*100000);
-        localStorage.setItem('did', deviceId);
-        let userName = localStorage.getItem('u_name') || "";
-        let installedDate = localStorage.getItem('inst_date');
-
-        // --- 1. LOGIN ---
         function doLogin() {
             let n = document.getElementById('u_name').value;
             let p = document.getElementById('u_pin').value;
-            if(!n || !p) return alert("नाव आणि पिन आवश्यक आहे.");
-            if(p === "922523") { 
-                localStorage.setItem('u_name', n); userName = n;
-                if(!installedDate) { installedDate = Date.now(); localStorage.setItem('inst_date', installedDate); }
-                let daysPassed = (Date.now() - installedDate) / (1000 * 60 * 60 * 24);
-                if(daysPassed > 30) return alert("30 दिवसांची मुदत संपली आहे.");
+            if(p !== "922523") return alert("चुकीचा पिन!");
+            
+            let inst = localStorage.getItem('inst_date');
+            if(!inst) { inst = Date.now(); localStorage.setItem('inst_date', inst); }
+            if((Date.now() - inst) > (30*24*60*60*1000)) return alert("Validity Expired!");
 
-                if(navigator.onLine) {
-                    db.ref('users/' + deviceId).update({ name: n, device: (typeof device !== 'undefined') ? device.model : "Android", last_login: Date.now(), isOnline: true });
-                }
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('home-screen').style.display = 'block';
-                document.getElementById('welcome-text').innerText = "हरि ॐ, " + n;
-                listenAccess();
-            } else { alert("चुकीचा पिन!"); }
+            localStorage.setItem('u_name', n);
+            document.getElementById('disp-name').innerText = n;
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('home-screen').classList.add('active');
+
+            if(navigator.onLine) {
+                if(typeof autoBookList !== 'undefined') db.ref('library_catalog').set(autoBookList);
+                db.ref('users/' + did).update({ name: n, isOnline: true, device: "Android", last_login: Date.now() });
+                db.ref('users/' + did + '/access').on('value', snap => { renderBooks(snap.val() || {}); });
+                
+                // Block Listener
+                db.ref('users/' + did + '/isBlocked').on('value', snap => {
+                    if(snap.val() === true) {
+                        alert("Your account has been suspended by Admin.");
+                        location.reload(); 
+                    }
+                });
+            } else {
+                renderBooks(JSON.parse(localStorage.getItem('cached_access')) || {});
+            }
         }
 
-        // --- 2. ACCESS ---
-        function listenAccess() {
-            db.ref('users/' + deviceId + '/access').on('value', snap => {
-                let accessList = snap.val() || {};
-                renderBooks(accessList);
-            });
-        }
-        function renderBooks(accessList) {
+        function renderBooks(access) {
+            localStorage.setItem('cached_access', JSON.stringify(access));
             let grid = document.getElementById('book-grid');
-            let waiting = document.getElementById('waiting-state');
             grid.innerHTML = "";
-            let hasBooks = false;
+            let count = 0;
             if(typeof autoBookList !== 'undefined') {
-                autoBookList.forEach(book => {
-                    if(accessList[book.name] === true) {
-                        hasBooks = true;
-                        let div = document.createElement('div'); div.className = 'book-card';
-                        div.innerHTML = `<img src="${book.image || 'cover.jpg'}" class="book-cover"><div class="pin-icon">📌</div><div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); padding:5px; text-align:center; font-size:12px;">${book.name}</div>`;
-                        div.onclick = () => openReader(book.file, book.name);
-                        grid.appendChild(div);
+                let sorted = autoBookList.sort((a,b) => (pinned.includes(b.name)?1:0) - (pinned.includes(a.name)?1:0));
+                sorted.forEach(b => {
+                    if(access[b.name]) {
+                        if(currentFilter === 'Pinned' && !pinned.includes(b.name)) return;
+                        count++;
+                        let progress = localStorage.getItem('prog_' + b.name) || 0;
+                        let isPin = pinned.includes(b.name) ? '📌' : '';
+                        grid.innerHTML += `
+                        <div class="book-card" onclick="openBook('${b.file}', '${b.name}')" oncontextmenu="togglePin('${b.name}'); return false;">
+                            <img src="${b.image || 'cover.jpg'}" class="book-cover">
+                            <div class="pin-icon">${isPin}</div>
+                            <div style="position:absolute; bottom:0; width:100%; height:40px; background:rgba(0,0,0,0.8); display:flex; flex-direction:column; justify-content:center; padding-left:10px;">
+                                <div style="font-size:12px;">${b.name}</div>
+                            </div>
+                            <div class="progress-line"><div class="progress-fill" style="width:${progress}%"></div></div>
+                        </div>`;
                     }
                 });
             }
-            if(hasBooks) { waiting.style.display = 'none'; grid.style.display = 'grid'; } 
-            else { waiting.style.display = 'flex'; grid.style.display = 'none'; }
+            document.getElementById('waiting').style.display = (count===0) ? 'block' : 'none';
         }
 
-        // --- 3. READER ---
-        function openReader(file, title) {
-            document.getElementById('home-screen').style.display = 'none';
-            document.getElementById('reader-screen').style.display = 'block';
-            let frame = document.getElementById('book-frame');
-            document.getElementById('book-title-disp').innerText = title;
-            frame.src = file;
-            frame.onload = function() {
-                let lastPos = localStorage.getItem('pos_' + title);
-                if(lastPos) frame.contentWindow.scrollTo(0, lastPos);
-                frame.contentWindow.onscroll = function() { localStorage.setItem('pos_' + title, frame.contentWindow.scrollY); };
+        function togglePin(name) {
+            if(pinned.includes(name)) pinned = pinned.filter(x => x!==name); else pinned.push(name);
+            localStorage.setItem('pins', JSON.stringify(pinned));
+            location.reload();
+        }
+        function filterCat(c) { currentFilter = c; location.reload(); }
+
+        function openBook(file, name) {
+            document.getElementById('home-screen').classList.remove('active');
+            document.getElementById('reader-screen').classList.add('active');
+            document.getElementById('reader-title').innerText = name;
+            let fr = document.getElementById('book-frame');
+            fr.src = file;
+            fr.onload = function() {
+                let last = localStorage.getItem('scroll_' + name);
+                if(last) fr.contentWindow.scrollTo(0, last);
+                fr.contentWindow.onscroll = function() {
+                    let win = fr.contentWindow;
+                    let pct = Math.round((win.scrollY / (win.document.body.scrollHeight - win.innerHeight)) * 100);
+                    localStorage.setItem('scroll_' + name, win.scrollY);
+                    localStorage.setItem('prog_' + name, pct);
+                    if(Math.random() < 0.1) db.ref('users/' + did + '/progress/' + name).set(pct);
+                };
+                fr.contentDocument.body.addEventListener('keyup', (e) => { if(e.key=='PrintScreen') alert('Screenshots disabled'); });
             };
         }
+        
         function closeReader() {
-            document.getElementById('reader-screen').style.display = 'none';
-            document.getElementById('home-screen').style.display = 'block';
+            document.getElementById('reader-screen').classList.remove('active');
+            document.getElementById('home-screen').classList.add('active');
             document.getElementById('book-frame').src = "";
-            document.getElementById('search-bar').style.display = 'none';
-        }
-        function toggleSearch() { let bar = document.getElementById('search-bar'); bar.style.display = (bar.style.display === 'flex') ? 'none' : 'flex'; }
-        function performSearch() {
-            let txt = document.getElementById('search-input').value;
-            let frame = document.getElementById('book-frame').contentWindow;
-            if(frame && frame.find) frame.find(txt); else alert("Search not supported on this device.");
+            location.reload();
         }
 
-        // --- 4. ABOUT US (NEW CONTENT) ---
-        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
-        
+        function openSettings() {
+            let html = `
+                <h2 style="color:var(--neon)">सेटिंग्ज</h2>
+                <div onclick="showAbout()" style="padding:15px; border-bottom:1px solid #333; cursor:pointer;">ℹ️ आमच्याबद्दल (About Us)</div>
+                <div onclick="showChat()" style="padding:15px; border-bottom:1px solid #333; cursor:pointer;">💬 फीडबॅक (Feedback)</div>
+                <div style="padding:15px; color:#777;">User ID: ${did}</div>
+            `;
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-box').style.display = 'flex';
+        }
+
         function showAbout() {
             let content = `
                 <div class="about-text">
-                    <h2 style="color:gold; text-align:center; border-bottom:1px solid gold; padding-bottom:10px;">॥ प्रज्ञासूर्य ॥</h2>
+                    <h2 style="text-align:center; color:var(--gold); border-bottom:1px solid var(--border); padding-bottom:10px;">॥ श्री दत्तात्रेय प्रभू भगवान की जय ॥</h2>
                     
-                    <img src="photo1.jpg" style="width:100%; border-radius:10px; margin-bottom:15px; border:1px solid rgba(255,255,255,0.2);">
+                    <img src="photo1.jpg" style="width:100%; border-radius:15px; margin: 15px 0; border:1px solid rgba(255,255,255,0.2);">
                     
-                    <p>"ज्याप्रमाणे आकाशात सूर्य तळपत असतो आणि त्याच्या प्रकाशाने संपूर्ण विश्व उजळून निघते, त्याचप्रमाणे आपल्या साधकांच्या आयुष्यातील अज्ञानाचा अंधकार दूर करून त्यांना 'ब्रह्मविद्येचा' लख्ख प्रकाश देणारे साक्षात <span class="highlight">'प्रज्ञासूर्य' म्हणजे प. पू. प. म. श्री मोठे बाबा अंकुळनेरकर</span> होत."</p>
+                    <p>"ज्याप्रमाणे आकाशात सूर्य तळपत असतो आणि त्याच्या प्रकाशाने संपूर्ण विश्व उजळून निघते, त्याचप्रमाणे आपल्या साधकांच्या आयुष्यातील अज्ञानाचा अंधकार दूर करून त्यांना 'ब्रह्मविद्येचा' लख्ख प्रकाश देणारे साक्षात <span class="gold-txt">'प्रज्ञासूर्य' म्हणजे प. पू. प. म. श्री मोठे बाबा अंकुळनेरकर</span> होत."</p>
                     
-                    <p>या विश्वात सूर्याचे स्थान अढळ आहे, सूर्य कधीही मावळत नाही, तो फक्त आपली जागा बदलतो. अगदी त्याचप्रमाणे, प. पू. श्री मोठेबाबांचे अस्तित्व आणि त्यांचे कार्य आजही अखंड आणि अविरत सुरू आहे.</p>
+                    <p>या विश्वात सूर्याचे स्थान अढळ आहे, सूर्य कधीही मावळत नाही, तो फक्त आपली जागा बदलतो. अगदी त्याचप्रमाणे, प. पू. श्री मोठेबाबांचे अस्तित्व आणि त्यांचे कार्य आजही अखंड आणि अविरत सुरू आहे. ते आजही आपल्या शिष्यवृंदांच्या, साधकांच्या पाठीशी खंबीरपणे उभे आहेत.</p>
                     
-                    <p>शास्त्रांमध्ये 'सर्वविद्' आणि 'ब्रह्मनिष्ठ' अशा महापुरुषांचे वर्णन आढळते. श्रीमोठेबाबा हे या वर्णनाचे मूर्तिमंत रूप आहेत. गीतेतील १३ व्या अध्यायातील 'ज्ञानियाची लक्षणे' त्यांच्या ठायी अनुभवास येतात.</p>
+                    <p>शास्त्रांमध्ये 'सर्वविद्' (सर्व काही जाणणारा) आणि 'ब्रह्मनिष्ठ' (ब्रह्माशी एकरूप झालेला) अशा महापुरुषांचे वर्णन आढळते. श्रीमोठेबाबा हे या वर्णनाचे मूर्तिमंत आणि प्रत्यक्ष रूप आहेत. गीतेत १३ व्या अध्यायात 'ज्ञानियाची लक्षणे' सांगितली आहेत—जसे की अमानित्व, अदंभित्व, अचल शांती, वैराग्य, निरहंकार वृत्ती आणि केवळ ईश्वरप्राप्तीची तळमळ—ही सर्व लक्षणे श्रीमोठेबाबांच्या ठायी आजही आपल्याला अनुभवास येतात.</p>
                     
-                    <p>श्रीमोठेबाबा हे केवळ एक व्यक्ती नसून ती एक <span class="highlight">'अखंड चेतना'</span> आहे. जसा सूर्य स्वतः प्रकाशीत होऊन जगाला प्रकाश देतो, तसे श्रीमोठेबाबा आपल्या तपाच्या सामर्थ्याने साधकांचे जीवन उज्वल करत आहेत.</p>
+                    <p>त्यांचे संपूर्ण आयुष्य हे 'ब्रह्मविद्या शास्त्राच्या' चिंतनात आणि आचरणात व्यतीत झाले आहे. राहूनही कमळाच्या पानाप्रमाणे अलिप्त ईश्वरप्राप्तीसाठी आचरण कसे शुद्ध आणि निर्मळ असावे याचा वस्तुपाठ ते आपल्या साधकांना देत आहेत. श्रीमोठेबाबा हे केवळ एक व्यक्ती नसून ती एक <span class="gold-txt">'अखंड चेतना'</span> आहे. जसा सूर्य स्वतः प्रकाशीत होऊन जगाला प्रकाश देतो, तसे श्रीमोठेबाबा आपल्या तपाच्या सामर्थ्याने साधकांचे जीवन उज्वल करत आहेत. त्यांचे मार्गदर्शन, त्यांची प्रसन्नता आणि त्यांचा आशीर्वाद प्रत्येक श्रद्धावान साधकाला क्षणाक्षणाला जाणवत असतो.</p>
+                    
+                    <div class="quote-box">
+                        "हे ॲप, आणि आमचा हा छोटासा प्रयत्न, त्या महातेजस्वी 'प्रज्ञासूर्या'च्या चरणी अत्यंत विनम्र भावाने समर्पित आहे."
+                    </div>
 
-                    <p style="text-align:center; color:gold; font-style:italic;">हे ॲप, आणि आमचा हा छोटासा प्रयत्न, त्या महातेजस्वी 'प्रज्ञासूर्या'च्या चरणी अत्यंत विनम्र भावाने समर्पित आहे.</p>
+                    <h3 class="cyan-txt" style="text-align:center; margin-top:30px; border-top:1px solid var(--border); padding-top:20px;">॥ ब्रह्मविद्या - स्वाध्याय आणि चिंतन ॥</h3>
+                    
+                    <p>प. पू. श्री मोठे बाबांनी जी 'ब्रह्मविद्या' (ईश्वरी ज्ञान) दिली आहे, तिचे रक्षण करणे आणि अखंड चिंतन करणे हे प्रत्येक संन्यासी साधकाचे परम कर्तव्य आहे.</p>
+                    
+                    <img src="photo2.jpg" style="width:100%; border-radius:15px; margin: 15px 0; border:1px solid rgba(255,255,255,0.2);">
 
-                    <h3 class="sub-title">॥ ब्रह्मविद्या - स्वाध्याय आणि चिंतन ॥</h3>
-                    <p>प. पू. श्री मोठे बाबांनी जी 'ब्रह्मविद्या' दिली आहे, तिचे रक्षण करणे हे परम कर्तव्य आहे. संन्यास आश्रमात 'स्वाध्याय' आणि 'विहार' याला महत्त्व आहे. प्रवासात ग्रंथांच्या अनुपलब्धतेमुळे खंड पडू नये, यासाठी हे <strong>'ब्रह्मविद्या ॲप' (Digital Library)</strong> तयार करण्यात आले आहे.</p>
-
-                    <img src="photo2.jpg" style="width:100%; border-radius:10px; margin:15px 0; border:1px solid rgba(255,255,255,0.2);">
-
-                    <p><strong style="color:cyan;">या ॲपचा मुख्य उद्देश:</strong></p>
-                    <ul style="padding-left:20px;">
-                        <li><strong>१. अखंड स्वाध्याय:</strong> साधक कोणत्याही स्थानी असले तरी, त्यांना वाचन करता यावे.</li>
-                        <li><strong>२. दुर्मिळ ग्रंथ रक्षण:</strong> प्राचीन हस्तलिखिते आणि ग्रंथ डिजिटल स्वरूपात सुरक्षित राहावेत.</li>
-                        <li><strong>३. बाबांचे विचार:</strong> प. पू. मोठे बाबांची शिकवण आणि मार्गदर्शन नित्यनियम पाळण्यासाठी सहाय्यक ठरावे.</li>
+                    <p>संन्यास आश्रमात 'स्वाध्याय' (शास्त्राचा अभ्यास) आणि 'विहार' (भ्रमंती) याला अत्यंत महत्त्व आहे. साधक जेव्हा विहारासाठी किंवा चातुर्मासासाठी बाहेर असतात, तेव्हा सोबत अनेक ग्रंथ बाळगणे प्रत्येक वेळी शक्य होत नाही. ग्रंथांच्या अनुपलब्धतेमुळे साधनेच्या किंवा अभ्यासाच्या प्रवाहात खंड पडू नये, यासाठी हे <strong>'ब्रह्मविद्या ॲप'</strong> तयार करण्यात आले आहे.</p>
+                    
+                    <p>हे ॲप म्हणजे साधकांसाठी एक <span class="cyan-txt">'फिरते ग्रंथालय' (Digital Library)</span> आहे.</p>
+                    
+                    <p><strong class="gold-txt">या ॲपचा मुख्य उद्देश:</strong></p>
+                    <ul style="list-style:none; padding:0;">
+                        <li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>१. अखंड स्वाध्याय:</strong> साधक कोणत्याही स्थानी किंवा प्रवासात असले तरी, त्यांना शास्त्राचे वाचन आणि चिंतन अविरत करता यावे.</li>
+                        <li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>२. दुर्मिळ ग्रंथ रक्षण:</strong> प्राचीन हस्तलिखिते आणि आश्रमातील महत्त्वाचे ग्रंथ डिजिटल स्वरूपात सुरक्षित राहावेत आणि अभ्यासू साधकांना ते सहज उपलब्ध व्हावेत.</li>
+                        <li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>३. बाबांचे विचार:</strong> प. पू. मोठे बाबांची शिकवण आणि 'ब्रह्मविद्या' शास्त्राचे मार्गदर्शन साधकांना नित्यनियम पाळण्यासाठी सहाय्यक ठरावे.</li>
                     </ul>
-
-                    <p><span class="highlight">श्री देवदत्त आश्रम, जाधववाडी</span> हे या कार्याचे मुख्य प्रेरणास्थान आहे. श्रीमोठेबाबांच्या तपाने पुनीत झालेली ही भूमी म्हणजे ब्रह्मविद्येचे विद्यापीठच आहे.</p>
                     
-                    <h3 style="text-align:center; color:gold; margin-top:20px;">॥ श्रीदत्तात्रेयप्रभू महाराज की जय ॥</h3>
+                    <p><span class="gold-txt">श्री देवदत्त आश्रम, जाधववाडी</span> हे या कार्याचे मुख्य प्रेरणास्थान आहे. श्रीमोठेबाबांच्या तपाने पुनीत झालेली ही भूमी म्हणजे ब्रह्मविद्येचे विद्यापीठच आहे. इथूनच हा ज्ञानाचा प्रवाह आता आधुनिक तंत्रज्ञानाच्या साहाय्याने प्रत्येक साधकापर्यंत पोहोचत आहे, जेणेकरून त्यांची ज्ञानसाधना अधिक प्रगल्भ होईल.</p>
+                    
+                    <h3 style="text-align:center; color:var(--gold); margin-top:30px;">॥ श्रीदत्तात्रेयप्रभू महाराज की जय ॥</h3>
                 </div>
-                <button onclick="closeContent()" class="btn-glow" style="margin-top:20px;">मागे जा</button>
             `;
-            document.getElementById('dynamic-content').innerHTML = content;
-            document.getElementById('content-modal').style.display = 'flex';
+            document.getElementById('modal-body').innerHTML = content;
         }
 
-        function showFeedback() {
-            let content = `
-                <h2 style="color:cyan;">फीडबॅक</h2>
-                <div id="msg-box" style="height:300px; overflow-y:auto; background:#222; padding:10px; border-radius:10px; margin-bottom:10px;"></div>
+        function showChat() {
+            document.getElementById('modal-body').innerHTML = `
+                <h2 style="color:cyan">फीडबॅक</h2>
+                <div id="chat-box" style="height:300px; overflow-y:auto; background:#222; margin-bottom:10px; padding:10px; border-radius:10px;"></div>
                 <div style="display:flex; gap:10px;">
-                    <input type="text" id="fb-input" placeholder="संदेश लिहा..." style="width:70%;">
-                    <button onclick="sendFeedback()" style="background:linear-gradient(90deg, #00c6ff, #0072ff); color:white; border:none; padding:10px; border-radius:5px; flex:1;">Go</button>
+                    <input type="text" id="chat-in" placeholder="Message..." style="width:70%;">
+                    <button onclick="sendMsg()" style="padding:10px; background:cyan; border:none; border-radius:5px;">Send</button>
                 </div>
-                <button onclick="closeContent()" class="btn-glow" style="margin-top:10px;">बंद करा</button>
             `;
-            document.getElementById('dynamic-content').innerHTML = content;
-            document.getElementById('content-modal').style.display = 'flex';
-            loadMessages();
+            loadMsgs();
         }
-        function sendFeedback() {
-            let txt = document.getElementById('fb-input').value;
-            if(txt) { db.ref('feedback/' + deviceId).push({ sender: 'user', text: txt, time: Date.now() }); document.getElementById('fb-input').value = ""; }
+
+        function sendMsg() {
+            let txt = document.getElementById('chat-in').value;
+            if(txt) { db.ref('feedback/' + did).push({sender:'user', text:txt, time:Date.now()}); document.getElementById('chat-in').value=''; }
         }
-        function loadMessages() {
-            db.ref('feedback/' + deviceId).off();
-            db.ref('feedback/' + deviceId).on('child_added', snap => {
-                let m = snap.val();
-                let box = document.getElementById('msg-box');
-                if(box) {
-                    let color = (m.sender === 'admin') ? 'gold' : 'white';
-                    let bg = (m.sender === 'admin') ? 'rgba(255, 215, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-                    let align = (m.sender === 'admin') ? 'left' : 'right';
-                    box.innerHTML += `<div style="text-align:${align}; margin:5px;"><span style="background:${bg}; color:${color}; padding:8px 12px; border-radius:10px; display:inline-block;">${m.text}</span></div>`;
-                    box.scrollTop = box.scrollHeight;
-                }
+        function loadMsgs() {
+            db.ref('feedback/' + did).on('child_added', s => {
+                let m = s.val();
+                let b = document.getElementById('chat-box');
+                if(b) b.innerHTML += `<div style="text-align:${m.sender=='admin'?'left':'right'}; margin:5px;"><span style="background:${m.sender=='admin'?'#333':'#004444'}; padding:5px 10px; border-radius:10px;">${m.text}</span></div>`;
             });
         }
-        function showHelp() {
-            document.getElementById('dynamic-content').innerHTML = "<h2>मदत</h2><p>१. ॲडमिनने परवानगी दिल्यावरच पुस्तके दिसतील.<br>२. ३० दिवसांनी ॲप एक्सपायर होईल.<br>३. सर्चसाठी वाचताना खालील आयकॉन वापरा.</p><button onclick='closeContent()' class='btn-glow'>बंद करा</button>";
-            document.getElementById('content-modal').style.display = 'flex';
-        }
-        function showProfile() {
-             document.getElementById('dynamic-content').innerHTML = `<h2>प्रोफाईल</h2><p>नाव: ${userName}</p><p>ID: ${deviceId}</p><p>Validity: 30 Days</p><button onclick='closeContent()' class='btn-glow'>बंद करा</button>`;
-             document.getElementById('content-modal').style.display = 'flex';
-        }
-        function closeContent() { document.getElementById('content-modal').style.display = 'none'; }
+        function changeFont(dir) { let b = document.getElementById('book-frame').contentDocument.body; b.style.fontSize = (parseFloat(window.getComputedStyle(b).fontSize) + dir*2) + "px"; }
+        function toggleSearch() { let b=document.getElementById('search-box'); b.style.display=(b.style.display=='flex')?'none':'flex'; }
+        function doSearch() { document.getElementById('book-frame').contentWindow.find(document.getElementById('search-txt').value); }
     </script>
 </body>
 </html>
