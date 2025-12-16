@@ -10,7 +10,7 @@
     <script src="filelist.js"></script>
 
     <style>
-        /* --- CRYSTAL CLEAR LIQUID UI (Same as before) --- */
+        /* --- CRYSTAL CLEAR LIQUID UI --- */
         :root { --neon: #00f3ff; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.15); }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; overflow: hidden; user-select: none; }
         .bg-anim { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, #000000, #1a0b2e, #0f1c2e); background-size: 400% 400%; animation: bgMove 15s infinite; z-index: -1; }
@@ -49,134 +49,66 @@
 </head>
 <body>
     <div class="bg-anim"></div>
-
     <div id="login-screen" class="screen active">
         <div class="crystal-card">
             <h2 class="user-name-style">ब्रह्मविद्या</h2>
             <p style="color:#aaa; font-size:12px;">Since 2 Jan 2026</p>
-            <div style="font-style:italic; font-size:12px; margin:15px 0; color:#ddd;">
-                "श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>भलेतया हातीं नेदावा : अधिकारेंवीण ।।"
-            </div>
+            <div style="font-style:italic; font-size:12px; margin:15px 0; color:#ddd;">"श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>भलेतया हातीं नेदावा : अधिकारेंवीण ।।"</div>
             <input type="text" id="u_name" placeholder="तुमचे नाव (Name)">
             <input type="tel" id="u_pin" placeholder="PIN" maxlength="6">
             <button class="btn-liquid" id="login-btn" onclick="doLogin()">प्रवेश करा</button>
         </div>
     </div>
-
     <div id="home-screen" class="screen">
         <div class="header">
             <div class="user-name-style" id="disp-name">User</div>
-            <div style="display:flex; gap:15px;">
-                <span onclick="openSettings()" style="font-size:20px;">⚙️</span>
-            </div>
+            <div style="display:flex; gap:15px;"><span onclick="openSettings()" style="font-size:20px;">⚙️</span></div>
         </div>
-        <div class="cat-bar" id="cat-container">
-            <div class="cat-chip sel" onclick="filterCat('All')">All</div>
-            <div class="cat-chip" onclick="filterCat('Pinned')">📌 Pinned</div>
-        </div>
-        <div id="waiting" style="display:none; text-align:center; margin-top:50px; padding:20px;">
-            <p style="color:var(--gold); font-style:italic; font-size:18px;">"कृपाप्रसादाची वाट पहा..."</p>
-        </div>
+        <div class="cat-bar" id="cat-container"><div class="cat-chip sel" onclick="filterCat('All')">All</div><div class="cat-chip" onclick="filterCat('Pinned')">📌 Pinned</div></div>
+        <div id="waiting" style="display:none; text-align:center; margin-top:50px; padding:20px;"><p style="color:var(--gold); font-style:italic; font-size:18px;">"WAIT FOR ADMIN APPROVAL..."</p></div>
         <div class="grid" id="book-grid"></div>
     </div>
-
     <div id="reader-screen" class="screen"><div style="height:50px; background:#111; display:flex; align-items:center; justify-content:space-between; padding:0 15px;"><span onclick="closeReader()" style="color:white; font-size:24px;">←</span><span id="reader-title" style="color:white; font-size:14px;">Book</span><div style="display:flex; gap:15px;"><span onclick="changeFont(1)" style="font-size:18px;">A+</span><span onclick="changeFont(-1)" style="font-size:14px;">A-</span><span onclick="toggleSearch()" style="font-size:18px;">🔍</span></div></div><iframe id="book-frame" style="width:100%; height:calc(100% - 100px); border:none; background:white;"></iframe><div id="search-box" class="search-overlay"><input type="text" id="search-txt" placeholder="Search..." style="width:60%;"><button onclick="doSearch()" style="padding:5px 15px;">Go</button></div></div>
     <div id="modal-box" class="modal"><div class="modal-content" id="modal-body"></div><button onclick="document.getElementById('modal-box').style.display='none'" style="padding:15px; background:#333; color:white; border:none; width:100%;">Close</button></div>
 
     <script>
         const firebaseConfig = { databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app" };
-        let db;
-        let did; // User ID (now based on Name)
-        let deviceUuid = "unknown"; // Hardware ID
-
-        // Wait for Cordova Plugins
+        let db; let did; let deviceUuid = "unknown";
         document.addEventListener('deviceready', function() {
             try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch(e){}
-            deviceUuid = device.uuid; // Get the unique hardware ID
-            console.log("Device UUID:", deviceUuid);
-            
-            // Auto-login if session exists
+            deviceUuid = device.uuid;
             let savedName = localStorage.getItem('u_name');
-            if(savedName) {
-                 document.getElementById('u_name').value = savedName;
-                 document.getElementById('u_pin').value = "922523"; // Auto-fill pin for UX
-                 doLogin();
-            }
+            if(savedName) { document.getElementById('u_name').value = savedName; document.getElementById('u_pin').value = "922523"; doLogin(); }
         }, false);
+        let pinned = JSON.parse(localStorage.getItem('pins')) || []; let currentFilter = 'All';
 
-        let pinned = JSON.parse(localStorage.getItem('pins')) || [];
-        let currentFilter = 'All';
-
-        // --- 🔥 NEW LOGIN LOGIC (ONE DEVICE ENFORCEMENT) ---
         function doLogin() {
-            let n = document.getElementById('u_name').value.trim();
-            let p = document.getElementById('u_pin').value;
-            if(!n) return alert("कृपया नाव टाका.");
-            if(p !== "922523") return alert("चुकीचा पिन!");
-            
-            // Create a safe ID from the name (remove special chars)
+            let n = document.getElementById('u_name').value.trim(); let p = document.getElementById('u_pin').value;
+            if(!n) return alert("कृपया नाव टाका."); if(p !== "922523") return alert("चुकीचा पिन!");
             let safeId = "U_" + n.replace(/[.#$[\]]/g, '_');
-
-            document.getElementById('login-btn').innerText = "तपासत आहे...";
-            document.getElementById('login-btn').disabled = true;
-
-            // Check Firebase for this user
+            document.getElementById('login-btn').innerText = "तपासत आहे..."; document.getElementById('login-btn').disabled = true;
             db.ref('users/' + safeId).once('value', snapshot => {
                 let userData = snapshot.val();
-
                 if (userData && userData.deviceId && userData.deviceId !== deviceUuid) {
-                    // DEVICE MISMATCH! Block login.
-                    alert("⚠️ प्रवेश नाकारला!\n\nहे खाते आधीच दुसऱ्या मोबाईलवर नोंदणीकृत आहे ('" + userData.deviceModel + "').\n\nसुरक्षेच्या कारणास्तव एका वेळी फक्त एकाच डिव्हाइसवर ॲप वापरता येते.");
-                    document.getElementById('login-btn').innerText = "प्रवेश करा";
-                    document.getElementById('login-btn').disabled = false;
-                    localStorage.clear(); // Clear local data for security
-                } else {
-                    // SUCCESS: First time login OR Same device matches
-                    proceedToHome(n, safeId);
-                }
+                    alert("⚠️ प्रवेश नाकारला!\n\nहे खाते आधीच दुसऱ्या मोबाईलवर नोंदणीकृत आहे.\n\nसुरक्षेच्या कारणास्तव एका वेळी फक्त एकाच डिव्हाइसवर ॲप वापरता येते.");
+                    document.getElementById('login-btn').innerText = "प्रवेश करा"; document.getElementById('login-btn').disabled = false; localStorage.clear();
+                } else { proceedToHome(n, safeId); }
             });
         }
-
         function proceedToHome(name, safeId) {
-            // Validity Check
-            let inst = localStorage.getItem('inst_date');
-            if(!inst) { inst = Date.now(); localStorage.setItem('inst_date', inst); }
+            let inst = localStorage.getItem('inst_date'); if(!inst) { inst = Date.now(); localStorage.setItem('inst_date', inst); }
             if((Date.now() - inst) > (30*24*60*60*1000)) return alert("Validity Expired!");
-
-            did = safeId; // Set global user ID
-            localStorage.setItem('u_name', name);
-            localStorage.setItem('did', did);
-            
-            document.getElementById('disp-name').innerText = name;
-            document.getElementById('login-screen').classList.remove('active');
-            document.getElementById('home-screen').classList.add('active');
-
+            did = safeId; localStorage.setItem('u_name', name); localStorage.setItem('did', did);
+            document.getElementById('disp-name').innerText = name; document.getElementById('login-screen').classList.remove('active'); document.getElementById('home-screen').classList.add('active');
             if(navigator.onLine) {
-                // Update/Register User with DEVICE ID
-                db.ref('users/' + did).update({ 
-                    name: name, 
-                    deviceId: deviceUuid, // 🔥 SAVE DEVICE ID
-                    deviceModel: device.model,
-                    isOnline: true, 
-                    last_login: Date.now() 
-                });
-                
-                // Listeners
+                db.ref('users/' + did).update({ name: name, deviceId: deviceUuid, deviceModel: device.model, isOnline: true, last_login: Date.now() });
                 db.ref('users/' + did + '/access').on('value', snap => { renderBooks(snap.val() || {}); });
-                db.ref('users/' + did + '/isBlocked').on('value', snap => {
-                    if(snap.val() === true) { alert("Your account has been suspended by Admin."); location.reload(); }
-                });
-                 // Offline handler
+                db.ref('users/' + did + '/isBlocked').on('value', snap => { if(snap.val() === true) { alert("Your account has been suspended by Admin."); location.reload(); } });
                 db.ref('users/' + did + '/isOnline').onDisconnect().set(false);
-            } else {
-                renderBooks(JSON.parse(localStorage.getItem('cached_access')) || {});
-            }
+            } else { renderBooks(JSON.parse(localStorage.getItem('cached_access')) || {}); }
         }
-
-        // --- Rest of the functions (renderBooks, togglePin, Reader, About Us) remain the same ---
         function renderBooks(access) {
-            localStorage.setItem('cached_access', JSON.stringify(access));
-            let grid = document.getElementById('book-grid'); grid.innerHTML = ""; let count = 0;
+            localStorage.setItem('cached_access', JSON.stringify(access)); let grid = document.getElementById('book-grid'); grid.innerHTML = ""; let count = 0;
             if(typeof autoBookList !== 'undefined') {
                 let sorted = autoBookList.sort((a,b) => (pinned.includes(b.name)?1:0) - (pinned.includes(a.name)?1:0));
                 sorted.forEach(b => {
@@ -194,7 +126,36 @@
         function openBook(file, name) { document.getElementById('home-screen').classList.remove('active'); document.getElementById('reader-screen').classList.add('active'); document.getElementById('reader-title').innerText = name; let fr = document.getElementById('book-frame'); fr.src = file; fr.onload = function() { let last = localStorage.getItem('scroll_' + name); if(last) fr.contentWindow.scrollTo(0, last); fr.contentWindow.onscroll = function() { let win = fr.contentWindow; let pct = Math.round((win.scrollY / (win.document.body.scrollHeight - win.innerHeight)) * 100); localStorage.setItem('scroll_' + name, win.scrollY); localStorage.setItem('prog_' + name, pct); if(Math.random() < 0.1 && navigator.onLine) db.ref('users/' + did + '/progress/' + name).set(pct); }; fr.contentDocument.body.addEventListener('keyup', (e) => { if(e.key=='PrintScreen') alert('Screenshots disabled'); }); }; }
         function closeReader() { document.getElementById('reader-screen').classList.remove('active'); document.getElementById('home-screen').classList.add('active'); document.getElementById('book-frame').src = ""; location.reload(); }
         function openSettings() { document.getElementById('modal-body').innerHTML = `<h2 style="color:var(--neon)">सेटिंग्ज</h2><div onclick="showAbout()" style="padding:15px; border-bottom:1px solid #333; cursor:pointer;">ℹ️ आमच्याबद्दल (About Us)</div><div onclick="showChat()" style="padding:15px; border-bottom:1px solid #333; cursor:pointer;">💬 फीडबॅक (Feedback)</div><div style="padding:15px; color:#777; font-size:10px;">ID: ${did}<br>Device: ${deviceUuid}</div>`; document.getElementById('modal-box').style.display = 'flex'; }
-        function showAbout() { document.getElementById('modal-body').innerHTML = `<div class="about-text"><h2 style="text-align:center; color:var(--gold); border-bottom:1px solid var(--border); padding-bottom:10px;">॥ श्री दत्तात्रेय प्रभू भगवान की जय ॥</h2><img src="photo1.jpg" style="width:100%; border-radius:15px; margin: 15px 0; border:1px solid rgba(255,255,255,0.2);"><p>"ज्याप्रमाणे आकाशात सूर्य तळपत असतो आणि त्याच्या प्रकाशाने संपूर्ण विश्व उजळून निघते, त्याचप्रमाणे आपल्या साधकांच्या आयुष्यातील अज्ञानाचा अंधकार दूर करून त्यांना 'ब्रह्मविद्येचा' लख्ख प्रकाश देणारे साक्षात <span class="gold-txt">'प्रज्ञासूर्य' म्हणजे प. पू. प. म. श्री मोठे बाबा अंकुळनेरकर</span> होत."</p><p>या विश्वात सूर्याचे स्थान अढळ आहे, सूर्य कधीही मावळत नाही, तो फक्त आपली जागा बदलतो. अगदी त्याचप्रमाणे, प. पू. श्री मोठेबाबांचे अस्तित्व आणि त्यांचे कार्य आजही अखंड आणि अविरत सुरू आहे. ते आजही आपल्या शिष्यवृंदांच्या, साधकांच्या पाठीशी खंबीरपणे उभे आहेत.</p><p>शास्त्रांमध्ये 'सर्वविद्' (सर्व काही जाणणारा) आणि 'ब्रह्मनिष्ठ' (ब्रह्माशी एकरूप झालेला) अशा महापुरुषांचे वर्णन आढळते. श्रीमोठेबाबा हे या वर्णनाचे मूर्तिमंत आणि प्रत्यक्ष रूप आहेत. गीतेत १३ व्या अध्यायात 'ज्ञानियाची लक्षणे' सांगितली आहेत—जसे की अमानित्व, अदंभित्व, अचल शांती, वैराग्य, निरहंकार वृत्ती आणि केवळ ईश्वरप्राप्तीची तळमळ—ही सर्व लक्षणे श्रीमोठेबाबांच्या ठायी आजही आपल्याला अनुभवास येतात.</p><p>त्यांचे संपूर्ण आयुष्य हे 'ब्रह्मविद्या शास्त्राच्या' चिंतनात आणि आचरणात व्यतीत झाले आहे. राहूनही कमळाच्या पानाप्रमाणे अलिप्त ईश्वरप्राप्तीसाठी आचरण कसे शुद्ध आणि निर्मळ असावे याचा वस्तुपाठ ते आपल्या साधकांना देत आहेत. श्रीमोठेबाबा हे केवळ एक व्यक्ती नसून ती एक <span class="gold-txt">'अखंड चेतना'</span> आहे. जसा सूर्य स्वतः प्रकाशीत होऊन जगाला प्रकाश देतो, तसे श्रीमोठेबाबा आपल्या तपाच्या सामर्थ्याने साधकांचे जीवन उज्वल करत आहेत. त्यांचे मार्गदर्शन, त्यांची प्रसन्नता आणि त्यांचा आशीर्वाद प्रत्येक श्रद्धावान साधकाला क्षणाक्षणाला जाणवत असतो.</p><div class="quote-box">"हे ॲप, आणि आमचा हा छोटासा प्रयत्न, त्या महातेजस्वी 'प्रज्ञासूर्या'च्या चरणी अत्यंत विनम्र भावाने समर्पित आहे."</div><h3 class="cyan-txt" style="text-align:center; margin-top:30px; border-top:1px solid var(--border); padding-top:20px;">॥ ब्रह्मविद्या - स्वाध्याय आणि चिंतन ॥</h3><p>प. पू. श्री मोठे बाबांनी जी 'ब्रह्मविद्या' (ईश्वरी ज्ञान) दिली आहे, तिचे रक्षण करणे आणि अखंड चिंतन करणे हे प्रत्येक संन्यासी साधकाचे परम कर्तव्य आहे.</p><img src="photo2.jpg" style="width:100%; border-radius:15px; margin: 15px 0; border:1px solid rgba(255,255,255,0.2);"><p>संन्यास आश्रमात 'स्वाध्याय' (शास्त्राचा अभ्यास) आणि 'विहार' (भ्रमंती) याला अत्यंत महत्त्व आहे. साधक जेव्हा विहारासाठी किंवा चातुर्मासासाठी बाहेर असतात, तेव्हा सोबत अनेक ग्रंथ बाळगणे प्रत्येक वेळी शक्य होत नाही. ग्रंथांच्या अनुपलब्धतेमुळे साधनेच्या किंवा अभ्यासाच्या प्रवाहात खंड पडू नये, यासाठी हे <strong>'ब्रह्मविद्या ॲप'</strong> तयार करण्यात आले आहे.</p><p>हे ॲप म्हणजे साधकांसाठी एक <span class="cyan-txt">'फिरते ग्रंथालय' (Digital Library)</span> आहे.</p><p><strong class="gold-txt">या ॲपचा मुख्य उद्देश:</strong></p><ul style="list-style:none; padding:0;"><li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>१. अखंड स्वाध्याय:</strong> साधक कोणत्याही स्थानी किंवा प्रवासात असले तरी, त्यांना शास्त्राचे वाचन आणि चिंतन अविरत करता यावे.</li><li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>२. दुर्मिळ ग्रंथ रक्षण:</strong> प्राचीन हस्तलिखिते आणि आश्रमातील महत्त्वाचे ग्रंथ डिजिटल स्वरूपात सुरक्षित राहावेत आणि अभ्यासू साधकांना ते सहज उपलब्ध व्हावेत.</li><li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>३. बाबांचे विचार:</strong> प. पू. मोठे बाबांची शिकवण आणि 'ब्रह्मविद्या' शास्त्राचे मार्गदर्शन साधकांना नित्यनियम पाळण्यासाठी सहाय्यक ठरावे.</li></ul><p><span class="gold-txt">श्री देवदत्त आश्रम, जाधववाडी</span> हे या कार्याचे मुख्य प्रेरणास्थान आहे. श्रीमोठेबाबांच्या तपाने पुनीत झालेली ही भूमी म्हणजे ब्रह्मविद्येचे विद्यापीठच आहे. इथूनच हा ज्ञानाचा प्रवाह आता आधुनिक तंत्रज्ञानाच्या साहाय्याने प्रत्येक साधकापर्यंत पोहोचत आहे, जेणेकरून त्यांची ज्ञानसाधना अधिक प्रगल्भ होईल.</p><h3 style="text-align:center; color:var(--gold); margin-top:30px;">॥ श्रीदत्तात्रेयप्रभू महाराज की जय ॥</h3></div>`; }
+        
+        function showAbout() {
+            let content = `
+                <div class="about-text">
+                    <h2 style="text-align:center; color:var(--gold); border-bottom:1px solid var(--border); padding-bottom:10px;">॥ श्री दत्तात्रेय प्रभू भगवान की जय ॥</h2>
+                    
+                    <p>"ज्याप्रमाणे आकाशात सूर्य तळपत असतो आणि त्याच्या प्रकाशाने संपूर्ण विश्व उजळून निघते, त्याचप्रमाणे आपल्या साधकांच्या आयुष्यातील अज्ञानाचा अंधकार दूर करून त्यांना 'ब्रह्मविद्येचा' लख्ख प्रकाश देणारे साक्षात <span class="gold-txt">'प्रज्ञासूर्य' म्हणजे प. पू. प. म. श्री मोठे बाबा अंकुळनेरकर</span> होत."</p>
+                    <p>या विश्वात सूर्याचे स्थान अढळ आहे, सूर्य कधीही मावळत नाही, तो फक्त आपली जागा बदलतो. अगदी त्याचप्रमाणे, प. पू. श्री मोठेबाबांचे अस्तित्व आणि त्यांचे कार्य आजही अखंड आणि अविरत सुरू आहे. ते आजही आपल्या शिष्यवृंदांच्या, साधकांच्या पाठीशी खंबीरपणे उभे आहेत.</p>
+                    <p>शास्त्रांमध्ये 'सर्वविद्' (सर्व काही जाणणारा) आणि 'ब्रह्मनिष्ठ' (ब्रह्माशी एकरूप झालेला) अशा महापुरुषांचे वर्णन आढळते. श्रीमोठेबाबा हे या वर्णनाचे मूर्तिमंत आणि प्रत्यक्ष रूप आहेत. गीतेत १३ व्या अध्यायात 'ज्ञानियाची लक्षणे' सांगितली आहेत—जसे की अमानित्व, अदंभित्व, अचल शांती, वैराग्य, निरहंकार वृत्ती आणि केवळ ईश्वरप्राप्तीची तळमळ—ही सर्व लक्षणे श्रीमोठेबाबांच्या ठायी आजही आपल्याला अनुभवास येतात.</p>
+                    <p>त्यांचे संपूर्ण आयुष्य हे 'ब्रह्मविद्या शास्त्राच्या' चिंतनात आणि आचरणात व्यतीत झाले आहे. राहूनही कमळाच्या पानाप्रमाणे अलिप्त ईश्वरप्राप्तीसाठी आचरण कसे शुद्ध आणि निर्मळ असावे याचा वस्तुपाठ ते आपल्या साधकांना देत आहेत. श्रीमोठेबाबा हे केवळ एक व्यक्ती नसून ती एक <span class="gold-txt">'अखंड चेतना'</span> आहे. जसा सूर्य स्वतः प्रकाशीत होऊन जगाला प्रकाश देतो, तसे श्रीमोठेबाबा आपल्या तपाच्या सामर्थ्याने साधकांचे जीवन उज्वल करत आहेत. त्यांचे मार्गदर्शन, त्यांची प्रसन्नता आणि त्यांचा आशीर्वाद प्रत्येक श्रद्धावान साधकाला क्षणाक्षणाला जाणवत असतो.</p>
+                    <div class="quote-box">"हे ॲप, आणि आमचा हा छोटासा प्रयत्न, त्या महातेजस्वी 'प्रज्ञासूर्या'च्या चरणी अत्यंत विनम्र भावाने समर्पित आहे."</div>
+
+                    <h3 class="cyan-txt" style="text-align:center; margin-top:30px; border-top:1px solid var(--border); padding-top:20px;">॥ ब्रह्मविद्या - स्वाध्याय आणि चिंतन ॥</h3>
+                    <p>प. पू. श्री मोठे बाबांनी जी 'ब्रह्मविद्या' (ईश्वरी ज्ञान) दिली आहे, तिचे रक्षण करणे आणि अखंड चिंतन करणे हे प्रत्येक संन्यासी साधकाचे परम कर्तव्य आहे.</p>
+                    <p>संन्यास आश्रमात 'स्वाध्याय' (शास्त्राचा अभ्यास) आणि 'विहार' (भ्रमंती) याला अत्यंत महत्त्व आहे. साधक जेव्हा विहारासाठी किंवा चातुर्मासासाठी बाहेर असतात, तेव्हा सोबत अनेक ग्रंथ बाळगणे प्रत्येक वेळी शक्य होत नाही. ग्रंथांच्या अनुपलब्धतेमुळे साधनेच्या किंवा अभ्यासाच्या प्रवाहात खंड पडू नये, यासाठी हे <strong>'ब्रह्मविद्या ॲप'</strong> तयार करण्यात आले आहे.</p>
+                    <p>हे ॲप म्हणजे साधकांसाठी एक <span class="cyan-txt">'फिरते ग्रंथालय' (Digital Library)</span> आहे.</p>
+                    
+                    <p><strong class="gold-txt">या ॲपचा मुख्य उद्देश:</strong></p>
+                    <ul style="list-style:none; padding:0;">
+                        <li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>१. अखंड स्वाध्याय:</strong> साधक कोणत्याही स्थानी किंवा प्रवासात असले तरी, त्यांना शास्त्राचे वाचन आणि चिंतन अविरत करता यावे.</li>
+                        <li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>२. दुर्मिळ ग्रंथ रक्षण:</strong> प्राचीन हस्तलिखिते आणि आश्रमातील महत्त्वाचे ग्रंथ डिजिटल स्वरूपात सुरक्षित राहावेत आणि अभ्यासू साधकांना ते सहज उपलब्ध व्हावेत.</li>
+                        <li style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"><strong>३. बाबांचे विचार:</strong> प. पू. मोठे बाबांची शिकवण आणि 'ब्रह्मविद्या' शास्त्राचे मार्गदर्शन साधकांना नित्यनियम पाळण्यासाठी सहाय्यक ठरावे.</li>
+                    </ul>
+                    <p><span class="gold-txt">श्री देवदत्त आश्रम, जाधववाडी</span> हे या कार्याचे मुख्य प्रेरणास्थान आहे. श्रीमोठेबाबांच्या तपाने पुनीत झालेली ही भूमी म्हणजे ब्रह्मविद्येचे विद्यापीठच आहे. इथूनच हा ज्ञानाचा प्रवाह आता आधुनिक तंत्रज्ञानाच्या साहाय्याने प्रत्येक साधकापर्यंत पोहोचत आहे, जेणेकरून त्यांची ज्ञानसाधना अधिक प्रगल्भ होईल.</p>
+                    <h3 style="text-align:center; color:var(--gold); margin-top:30px;">॥ श्रीदत्तात्रेयप्रभू महाराज की जय ॥</h3>
+                </div>
+            `;
+            document.getElementById('modal-body').innerHTML = content;
+        }
+
         function showChat() { document.getElementById('modal-body').innerHTML = `<h2 style="color:cyan">फीडबॅक</h2><div id="chat-box" style="height:300px; overflow-y:auto; background:#222; margin-bottom:10px; padding:10px; border-radius:10px;"></div><div style="display:flex; gap:10px;"><input type="text" id="chat-in" placeholder="Message..." style="width:70%;"><button onclick="sendMsg()" style="padding:10px; background:cyan; border:none; border-radius:5px;">Send</button></div>`; loadMsgs(); }
         function sendMsg() { let txt = document.getElementById('chat-in').value; if(txt) { db.ref('feedback/' + did).push({sender:'user', text:txt, time:Date.now()}); document.getElementById('chat-in').value=''; } }
         function loadMsgs() { db.ref('feedback/' + did).on('child_added', s => { let m = s.val(); let b = document.getElementById('chat-box'); if(b) b.innerHTML += `<div style="text-align:${m.sender=='admin'?'left':'right'}; margin:5px;"><span style="background:${m.sender=='admin'?'#333':'#004444'}; padding:5px 10px; border-radius:10px;">${m.text}</span></div>`; }); }
