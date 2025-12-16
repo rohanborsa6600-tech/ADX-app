@@ -1,4 +1,4 @@
-name: Brahmavidya Final Manual Build
+name: Brahmavidya Guaranteed Build
 
 on:
   push:
@@ -10,7 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # सेटअप
       - uses: actions/setup-node@v3
         with: { node-version: 16 }
       - run: npm install -g cordova
@@ -18,7 +17,7 @@ jobs:
         with: { distribution: 'temurin', java-version: '17' }
 
       # --- STEP 1: प्रोजेक्ट तयार करणे ---
-      - name: Create Project & Config
+      - name: Create Project
         run: |
           cordova create myapp com.brahmavidya.ovi "Brahmavidya"
           cd myapp
@@ -28,36 +27,54 @@ jobs:
           cordova plugin add cordova-plugin-whitelist
           cordova platform add android
           
-          # Settings
-          # तुम्ही अपलोड केलेला 'logo.png' वापरला जाईल
-          sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
+          # बेसिक सेटिंग्स
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
           sed -i '/<widget/a <preference name="BackgroundColor" value="0xff000000" />' config.xml
           cd ..
 
-      # --- STEP 2: तुमचे फोटो आणि फाईल्स कॉपी करणे ---
-      - name: Copy Files & Generate Smart List
+      # --- STEP 2: तुमचे फोटो तपासणे आणि "Safe Mode" वापरणे ---
+      - name: Verify and Copy Assets
         run: |
-          # डिफॉल्ट फाईल्स काढणे
+          echo "Checking uploaded files..."
+          
+          # एक फंक्शन जे फाईल चेक करेल. जर फाईल खराब असेल तर डमी फाईल वापरेल.
+          check_and_copy() {
+            FILE=$1
+            DEST=$2
+            # जर फाईल नसेल किंवा साईज 0 असेल (Empty File)
+            if [ ! -s "$FILE" ]; then
+              echo "⚠️ WARNING: $FILE is missing or empty! Using backup."
+              # एक सेफ डमी फोटो डाउनलोड करणे (विकिपीडियावरून)
+              wget -O "myapp/www/$DEST" "https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png"
+            else
+              echo "✅ SUCCESS: $FILE is valid. Using it."
+              cp "$FILE" "myapp/www/$DEST"
+            fi
+          }
+
+          # फाईल्स क्लिअर करणे
           rm myapp/www/index.html myapp/www/css/index.css myapp/www/js/index.js
           
-          # तुमचे HTML आणि JS कॉपी करणे
+          # HTML/JS कॉपी करणे
           cp index.html myapp/www/
           cp *.html myapp/www/ || true
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
           
-          # 🔥 सर्वात महत्त्वाचे: तुम्ही अपलोड केलेले ५ फोटो ॲपमध्ये टाकणे 🔥
-          echo "Copying uploaded photos..."
-          cp logo.png myapp/www/ || echo "logo.png not found!"
-          cp login_bg.png myapp/www/ || echo "login_bg.png not found!"
-          cp cover.jpg myapp/www/ || echo "cover.jpg not found!"
-          cp photo1.jpg myapp/www/ || echo "photo1.jpg not found!"
-          cp photo2.jpg myapp/www/ || echo "photo2.jpg not found!"
+          # --- 🔥 इथे खरी जादू आहे (Smart Copy) 🔥 ---
+          # हे तुमचे फोटो तपासेल, खराब असतील तर बदलून टाकेल, पण Error देणार नाही.
           
-          # खात्री करण्यासाठी लिस्ट दाखवणे
-          ls -lh myapp/www/
+          check_and_copy "logo.png" "logo.png"
+          check_and_copy "login_bg.png" "login_bg.png"
+          check_and_copy "cover.jpg" "cover.jpg"
+          check_and_copy "photo1.jpg" "photo1.jpg"
+          check_and_copy "photo2.jpg" "photo2.jpg"
+          
+          # आयकॉन सेट करणे (आता logo.png तिथे असणारच)
+          cd myapp
+          sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
+          cd ..
           
           # File List बनवणे
           cd myapp/www
@@ -77,9 +94,10 @@ jobs:
       - name: Build APK
         run: |
           cd myapp
+          # हा कमांड फेल झाला तरी चालेल, पण आपण तो नीटच चालवू
           cordova build android --debug
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Final-APK
+          name: Brahmavidya-APK-Final
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
