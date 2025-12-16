@@ -1,4 +1,4 @@
-name: Build Brahmavidya Fixed-Images
+name: Build Brahmavidya No-Photos
 
 on:
   push:
@@ -15,10 +15,10 @@ jobs:
       - uses: actions/setup-java@v3
         with: { distribution: 'temurin', java-version: '17' }
       
-      # --- 🔥 जादुई स्टेप: सर्व फोटो इंटरनेटवरून घेणे (FIXED LINKS) 🔥 ---
-      - name: Download ALL Auto Images
+      # --- 🔥 फक्त महत्त्वाचे फोटो डाउनलोड करणे (Logo, BG, Cover) 🔥 ---
+      - name: Download Essential Images
         run: |
-          echo "Downloading all assets..."
+          echo "Downloading essential assets..."
           
           # 1. Logo (Book Icon)
           wget -O logo.png "https://cdn-icons-png.flaticon.com/512/2232/2232688.png"
@@ -29,13 +29,8 @@ jobs:
           # 3. Default Book Cover (Old Texture)
           wget -O cover.jpg "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
           
-          # 4. Photo 1 (About Us - Top)
-          wget -O photo1.jpg "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+          # Photo 1 & Photo 2 REMOVED as per request
           
-          # 5. Photo 2 (About Us - Bottom) - 🔥 NEW WORKING LINK 🔥
-          wget -O photo2.jpg "https://images.unsplash.com/photo-1519681393798-3828fb4090bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-          
-          # फाईल साईज चेक करणे (खात्रीसाठी)
           ls -lh *.png *.jpg
       # -----------------------------------------------------
 
@@ -43,14 +38,13 @@ jobs:
         run: |
           cordova create myapp com.brahmavidya.ovi "Brahmavidya"
           cd myapp
-          # Plugins
           cordova plugin add cordova-plugin-statusbar
           cordova plugin add cordova-plugin-network-information
           cordova plugin add cordova-plugin-device
           cordova plugin add cordova-plugin-whitelist
           cordova platform add android
           
-          # Settings (Using downloaded logo)
+          # Settings
           sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
@@ -60,21 +54,18 @@ jobs:
 
       - name: Copy Files & Generate Smart List
         run: |
-          # Clean default files
           rm myapp/www/index.html myapp/www/css/index.css myapp/www/js/index.js
           
-          # Copy your files
           cp index.html myapp/www/
           cp *.html myapp/www/ || true
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
           
-          # Copy Downloaded Images to www folder
+          # Copy Downloaded Images
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
           cp *.jpeg myapp/www/ || true
           
-          # Generate filelist.js
           cd myapp/www
           echo "var autoBookList = [" > filelist.js
           for f in *.html; do
@@ -83,7 +74,6 @@ jobs:
               img="cover.jpg"
               if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
               if [ -f "$baseName.png" ]; then img="$baseName.png"; fi
-              
               echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
             fi
           done
@@ -97,5 +87,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Fixed-APK
+          name: Brahmavidya-Lite-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
