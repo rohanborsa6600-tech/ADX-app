@@ -1,4 +1,4 @@
-name: Build Brahmavidya Ultimate Fix
+name: Build Brahmavidya Final Clean
 
 on:
   push:
@@ -10,33 +10,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # 🔥 सुरक्षित सिंटॅक्स (Inline Style) वापरला आहे, ज्यामुळे एरर येणार नाही
+      # Indentation Fix: साधी आणि सरळ पद्धत
       - uses: actions/setup-node@v3
-        with: { node-version: 16 }
+        with:
+          node-version: 16
           
       - run: npm install -g cordova
       
       - uses: actions/setup-java@v3
-        with: { distribution: 'temurin', java-version: '17' }
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       
-      # --- 🔥 STEP 1: कोड मधूनच फोटो तयार करणे (Base64) 🔥 ---
-      - name: Generate Built-in Images
-        run: |
-          echo "Generating assets from Base64..."
-          
-          # 1. LOGO (Blue Book Icon)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEUAAAD///+l2Z/dAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+YMEA0XFi05/uEAAAAqdEVYdGRhdGU6Y3JlYXRlADIwMjItMTItMTZUMTM6MjM6MjIrMDA6MDCp5+GfAAAAKXRFWHRkYXRlOm1vZGlmeQAyMDIyLTEyLTE2VDEzOjIzOjIyKzAwOjAw1S5h8gAAADBJREFUaN7twTEBAAAAwiD7p7bGDmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGQOvAABZca22wAAAABJRU5ErkJggg==" | base64 -d > logo.png
-          
-          # 2. LOGIN BACKGROUND (1x1 Pixel Dark)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > login_bg.png
-          
-          # 3. COVER (1x1 Pixel Brown)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mO485/hPwAI8AOY49s2YQAAAABJRU5ErkJggg==" | base64 -d > cover.jpg
-          
-          # Check if files exist
-          ls -lh *.png *.jpg
+      # --- ❌ NO IMAGE GENERATION (Skipped to prevent errors) ---
 
-      # --- STEP 2: प्रोजेक्ट तयार करणे ---
+      # --- STEP 1: प्रोजेक्ट तयार करणे ---
       - name: Create Project & Config
         run: |
           cordova create myapp com.brahmavidya.ovi "Brahmavidya"
@@ -47,15 +35,14 @@ jobs:
           cordova plugin add cordova-plugin-whitelist
           cordova platform add android
           
-          # Settings
-          sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
+          # Settings (आयकॉन लाइन काढून टाकली आहे - डिफॉल्ट वापरले जाईल)
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
           sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
           sed -i '/<widget/a <preference name="BackgroundColor" value="0xff000000" />' config.xml
           cd ..
 
-      # --- STEP 3: फाईल्स कॉपी करणे ---
+      # --- STEP 2: फाईल्स कॉपी करणे ---
       - name: Copy Files & Generate Smart List
         run: |
           # Clean default files
@@ -67,9 +54,7 @@ jobs:
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
           
-          # Copy Generated Images to www folder
-          cp *.png myapp/www/ || true
-          cp *.jpg myapp/www/ || true
+          # (इथे फोटो कॉपी करण्याची स्टेप काढून टाकली आहे)
           
           # Generate filelist.js
           cd myapp/www
@@ -77,15 +62,14 @@ jobs:
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
               baseName=$(basename "$f" .html)
-              img="cover.jpg"
-              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
-              echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
+              # इमेज नाही, त्यामुळे डिफॉल्ट रिकामे ठेवले आहे
+              echo "{ name: '$baseName', file: '$f', image: '' }," >> filelist.js
             fi
           done
           echo "];" >> filelist.js
           cd ../..
 
-      # --- STEP 4: APK बिल्ड करणे ---
+      # --- STEP 3: APK बिल्ड करणे ---
       - name: Build APK
         run: |
           cd myapp
@@ -93,5 +77,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Ready-APK
+          name: Brahmavidya-APK-Success
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
