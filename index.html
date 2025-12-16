@@ -3,218 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ब्रह्मविद्या कल्पद्रूम</title>
     
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src * 'self' data: content:; font-src 'self' data:; frame-src 'self' gap:; script-src 'self' https://www.gstatic.com 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app wss://*.firebaseio.com wss://*.firebasedatabase.app;">
-
-    <title>ब्रह्मविद्या</title>
-    
-    <script src="filelist.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="cordova.js"></script>
-    
+    <script src="filelist.js"></script>
+
     <style>
-        /* --- THEME --- */
-        :root { --glass-bg: rgba(255, 255, 255, 0.1); --glass-border: rgba(255, 255, 255, 0.2); }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; background: #000; color: white; -webkit-user-select: none; user-select: none; }
+        /* --- LIQUID GLASS THEME --- */
+        :root { --neon: #00f3ff; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.1); --border: rgba(255, 255, 255, 0.2); }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #050505; color: white; overflow: hidden; user-select: none; }
 
-        /* --- LOGIN SCREEN --- */
+        /* SCREENS */
+        .screen { display: none; position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
+        .active { display: flex; flex-direction: column; }
+
+        /* 1. LOGIN SCREEN */
         #login-screen {
-            background-image: url('login_bg.png'); /* तुमचे नवीन बॅकग्राउंड */
-            background-size: cover; background-position: center;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            position: absolute; width: 100%; height: 100%; z-index: 10;
+            background: url('login_bg.png') no-repeat center center/cover;
+            justify-content: center; align-items: center; z-index: 200;
         }
-        .login-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: -1; }
-
-        .glass-card {
-            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 30px; border-radius: 20px; text-align: center;
-            border: 1px solid var(--glass-border); width: 85%; max-width: 350px;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+        .glass-panel {
+            background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border); border-radius: 20px; padding: 30px; width: 85%; max-width: 350px;
+            text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-
-        .app-title { font-size: 28px; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 5px black; color: white; }
-        
-        /* --- ही आहे तुमची तारीख (Updated Style) --- */
-        .since-text {
-            font-size: 14px; 
-            color: #ffd700; /* सोन्याचा रंग (Gold) */
-            margin-bottom: 20px; 
-            font-weight: 600; 
-            letter-spacing: 2px; 
-            text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
-            display: inline-block;
-            padding-bottom: 5px;
-        }
-
-        .shlok-box {
-            font-size: 13px; font-style: italic; color: #fff; margin-bottom: 20px;
-            background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1); line-height: 1.5;
-        }
-
         input {
-            width: 90%; padding: 12px; margin: 15px 0; background: rgba(255,255,255,0.9); border: none;
-            border-radius: 30px; color: #000; text-align: center; font-size: 18px; outline: none; font-weight: bold;
+            width: 90%; padding: 12px; margin: 10px 0; background: rgba(0,0,0,0.5); border: 1px solid var(--border);
+            border-radius: 10px; color: white; text-align: center; font-size: 16px; outline: none;
+        }
+        .btn-glow {
+            width: 100%; padding: 12px; margin-top: 15px; background: linear-gradient(90deg, #00c6ff, #0072ff);
+            border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px;
+            box-shadow: 0 0 15px rgba(0, 114, 255, 0.5);
+        }
+
+        /* 2. HOME SCREEN */
+        #home-screen { background: radial-gradient(circle at center, #1a1a2e, #000); }
+        .header {
+            padding: 15px; padding-top: 50px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; overflow-y: auto; padding-bottom: 100px; }
+        
+        /* BOOK CARD */
+        .book-card {
+            background: var(--glass); border-radius: 15px; overflow: hidden; position: relative; height: 220px;
+            border: 1px solid var(--border); transition: transform 0.2s;
+        }
+        .book-card:active { transform: scale(0.95); }
+        .book-cover { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+        .pin-icon { position: absolute; top: 5px; right: 5px; font-size: 18px; color: gold; display: none; }
+
+        /* 3. MODALS (Settings, About, Feedback) */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300;
+            display: none; flex-direction: column; padding-top: 50px;
+        }
+        .modal-content {
+            background: #111; height: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px;
+            padding: 20px; overflow-y: auto; border-top: 1px solid var(--neon);
+        }
+        .setting-item { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: white; }
+        
+        /* ABOUT US STYLING */
+        .about-text { text-align: justify; font-size: 14px; line-height: 1.6; color: #ddd; }
+        .highlight { color: var(--gold); font-weight: bold; }
+        .sub-title { color: var(--neon); margin-top: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+
+        /* 4. READER */
+        #reader-screen { background: white; z-index: 100; }
+        .search-bar {
+            position: absolute; bottom: 0; width: 100%; background: #222; padding: 10px; display: none;
+            justify-content: center; align-items: center; gap: 10px;
         }
         
-        .btn-liquid {
-            width: 100%; padding: 12px; background: linear-gradient(135deg, #ffffff, #dcdcdc);
-            border: none; border-radius: 30px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer;
-            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        /* OVI (Waiting State) */
+        #waiting-state {
+            display: none; flex-direction: column; justify-content: center; align-items: center; height: 80vh; text-align: center; padding: 20px;
         }
+        .ovi-text { color: var(--gold); font-style: italic; font-size: 18px; line-height: 1.6; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
 
-        .footer { position: absolute; bottom: 20px; font-size: 12px; opacity: 0.8; letter-spacing: 1px; text-shadow: 0 1px 2px black; }
-
-        /* --- LIBRARY SCREEN --- */
-        #library-screen { display: none; position: absolute; width: 100%; height: 100%; background: #111; }
-        .header { padding: 15px; padding-top: 40px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .grid-view { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; overflow-y: auto; height: 85vh; }
-        .book-card { background: rgba(255,255,255,0.05); border-radius: 15px; overflow: hidden; height: 240px; position: relative; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
-        .book-card:active { transform: scale(0.96); }
-        .thumb { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
-        .book-title { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); padding: 10px; text-align: center; font-size: 13px; font-weight: 500; }
-
-        /* --- READER SCREEN --- */
-        #reader-screen { display: none; position: absolute; width: 100%; height: 100%; background: #000; }
-        .reader-nav { height: 60px; background: #111; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
-        iframe { width: 100%; height: calc(100% - 60px); border: none; background: white; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="login-overlay"></div>
-        <div class="glass-card">
-            <div class="app-title">ब्रह्मविद्या कल्पद्रूम</div>
+    <div id="login-screen" class="screen active">
+        <div class="glass-panel">
+            <h2 style="margin:0; text-shadow:0 0 10px cyan;">ब्रह्मविद्या</h2>
+            <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Since 2 Jan 2026</p>
             
-            <div class="since-text">Since 2 January 2026</div>
-            
-            <div class="shlok-box">
+            <input type="text" id="u_name" placeholder="तुमचे नाव (Name)">
+            <input type="tel" id="u_pin" placeholder="पिन (PIN)" maxlength="6">
+            <button class="btn-glow" onclick="doLogin()">प्रवेश करा</button>
+        </div>
+    </div>
+
+    <div id="home-screen" class="screen">
+        <div class="header">
+            <span id="welcome-text" style="font-weight:bold;">श्री दत्त समर्थ</span>
+            <span onclick="openSettings()" style="font-size:24px;">⚙️</span>
+        </div>
+
+        <div id="waiting-state">
+            <p class="ovi-text">
                 "श्रीकृष्णरावो म्हणे उद्धवदेवा : हा ज्ञानरत्नाचा ठेवा :<br>
                 भलेतया हातीं नेदावा : अधिकारेंवीण ।।"
-            </div>
-
-            <input type="tel" id="pin" placeholder="PIN टाका" maxlength="8">
-            <button class="btn-liquid" onclick="performLogin()">प्रवेश करा</button>
+            </p>
+            <p style="color:#666; font-size:12px; margin-top:20px;">(कृपाप्रसादाची वाट पहा...)</p>
         </div>
-        <div class="footer">|| श्री देवदत्त आश्रम, जाधववाडी ||</div>
+
+        <div id="book-grid" class="grid"></div>
     </div>
 
-    <div id="library-screen">
-        <div class="header">
-            <span style="font-size:22px; font-weight:bold;">ग्रंथालय</span>
-            <div style="display:flex; align-items:center;">
-                <div style="width:8px; height:8px; background:#0f0; border-radius:50%; margin-right:5px; box-shadow:0 0 5px #0f0;"></div>
-                <small style="color:#aaa;">Online</small>
-            </div>
+    <div id="reader-screen" class="screen">
+        <div style="height:50px; background:#111; display:flex; align-items:center; padding:0 15px; justify-content:space-between;">
+            <span onclick="closeReader()" style="color:white; font-size:24px;">&#10094;</span>
+            <span id="book-title-disp" style="color:white; font-size:14px;">Reading</span>
+            <span onclick="toggleSearch()" style="color:white; font-size:20px;">🔍</span>
         </div>
-        <div class="grid-view" id="book-container"></div>
+        <iframe id="book-frame" style="width:100%; height:calc(100% - 110px); border:none;"></iframe>
+        <div id="search-bar" class="search-bar">
+            <input type="text" id="search-input" placeholder="शोध..." style="width:70%; color:white;">
+            <button onclick="performSearch()" style="background:gold; border:none; padding:8px 15px; border-radius:5px;">Go</button>
+        </div>
     </div>
 
-    <div id="reader-screen">
-        <div class="reader-nav">
-            <span onclick="closeBook()" style="color:white; font-size:24px; cursor:pointer;">&#10094; Back</span>
-            <span id="read-title" style="color:white; font-size:14px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Reading</span>
-            <span style="width:24px;"></span>
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--neon); border-bottom:1px solid var(--neon);">सेटिंग्ज</h2>
+            <div class="setting-item" onclick="showAbout()"><span>ℹ️ आमच्याबद्दल (About Us)</span><span>&#10095;</span></div>
+            <div class="setting-item" onclick="showProfile()"><span>👤 प्रोफाईल (Profile)</span><span>&#10095;</span></div>
+            <div class="setting-item" onclick="showHelp()"><span>❓ मदत (Help)</span><span>&#10095;</span></div>
+            <div class="setting-item" onclick="showFeedback()"><span>💬 फीडबॅक (Feedback)</span><span>&#10095;</span></div>
+            
+            <div style="margin-top:20px; padding:15px; background:#222; border-radius:10px;">
+                <p style="margin:0; font-size:12px; color:#aaa;">प्रगती (Progress)</p>
+                <div style="width:100%; height:5px; background:#444; margin-top:5px; border-radius:5px;">
+                    <div id="progress-bar" style="width:0%; height:100%; background:var(--neon); border-radius:5px;"></div>
+                </div>
+            </div>
+            <button onclick="document.getElementById('settings-modal').style.display='none'" style="width:100%; padding:15px; background:#333; color:white; border:none; margin-top:30px;">बंद करा</button>
         </div>
-        <iframe id="frame" src=""></iframe>
+    </div>
+
+    <div id="content-modal" class="modal" style="z-index:400;">
+        <div class="modal-content" id="dynamic-content"></div>
     </div>
 
     <script>
-        // 1. DEVICE READY (Full Screen & Back Button)
-        document.addEventListener("deviceready", function() {
-            if(window.StatusBar) window.StatusBar.hide();
-            document.addEventListener("backbutton", function(e){
-                e.preventDefault();
-                if(document.getElementById('reader-screen').style.display === 'block') closeBook();
-                else navigator.app.exitApp();
-            }, false);
-        }, false);
-
-        // 2. FIREBASE CONFIG
-        var firebaseConfig = { databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app" };
+        // --- CONFIG ---
+        const firebaseConfig = { databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app" };
         try { firebase.initializeApp(firebaseConfig); var db = firebase.database(); } catch(e){}
-        
-        var deviceId = localStorage.getItem('did') || 'USER_' + Math.floor(Math.random()*10000);
-        localStorage.setItem('did', deviceId);
-        var allowedBooks = JSON.parse(localStorage.getItem('my_allowed_books')) || {};
 
-        // 3. LOGIN & LOGIC
-        function performLogin() {
-            var pin = document.getElementById('pin').value;
-            if(pin === "92252320") {
-                var modelName = "Android Mobile";
-                try {
-                   var match = navigator.userAgent.match(/Android.*?;(.*?)\)/);
-                   if (match && match[1]) modelName = match[1].trim();
-                } catch(e) {}
+        let deviceId = localStorage.getItem('did') || 'ID_' + Math.floor(Math.random()*100000);
+        localStorage.setItem('did', deviceId);
+        let userName = localStorage.getItem('u_name') || "";
+        let installedDate = localStorage.getItem('inst_date');
+
+        // --- 1. LOGIN ---
+        function doLogin() {
+            let n = document.getElementById('u_name').value;
+            let p = document.getElementById('u_pin').value;
+            if(!n || !p) return alert("नाव आणि पिन आवश्यक आहे.");
+            if(p === "922523") { 
+                localStorage.setItem('u_name', n); userName = n;
+                if(!installedDate) { installedDate = Date.now(); localStorage.setItem('inst_date', installedDate); }
+                let daysPassed = (Date.now() - installedDate) / (1000 * 60 * 60 * 24);
+                if(daysPassed > 30) return alert("30 दिवसांची मुदत संपली आहे.");
 
                 if(navigator.onLine) {
-                    var userRef = db.ref('users/' + deviceId);
-                    db.ref('.info/connected').on('value', function(snap) {
-                        if (snap.val() === true) {
-                            userRef.onDisconnect().update({ isOnline: false });
-                            userRef.update({ isOnline: true, last_login: new Date().toISOString(), device_name: modelName });
-                        }
-                    });
-                    if(typeof autoBookList !== 'undefined') db.ref('library_catalog').set(autoBookList);
+                    db.ref('users/' + deviceId).update({ name: n, device: (typeof device !== 'undefined') ? device.model : "Android", last_login: Date.now(), isOnline: true });
                 }
-
                 document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('library-screen').style.display = 'block';
-                
-                // Realtime Permission Sync
-                db.ref('users/' + deviceId + '/access').on('value', snap => {
-                    var newAccess = snap.val();
-                    allowedBooks = newAccess ? newAccess : {};
-                    localStorage.setItem('my_allowed_books', JSON.stringify(allowedBooks));
-                    loadBooks();
-                });
-            } else {
-                alert("चुकीचा पिन!");
-            }
+                document.getElementById('home-screen').style.display = 'block';
+                document.getElementById('welcome-text').innerText = "हरि ॐ, " + n;
+                listenAccess();
+            } else { alert("चुकीचा पिन!"); }
         }
 
-        // 4. LOAD BOOKS
-        function loadBooks() {
-            var container = document.getElementById('book-container');
-            container.innerHTML = "";
-            if(typeof autoBookList === 'undefined') return;
+        // --- 2. ACCESS ---
+        function listenAccess() {
+            db.ref('users/' + deviceId + '/access').on('value', snap => {
+                let accessList = snap.val() || {};
+                renderBooks(accessList);
+            });
+        }
+        function renderBooks(accessList) {
+            let grid = document.getElementById('book-grid');
+            let waiting = document.getElementById('waiting-state');
+            grid.innerHTML = "";
+            let hasBooks = false;
+            if(typeof autoBookList !== 'undefined') {
+                autoBookList.forEach(book => {
+                    if(accessList[book.name] === true) {
+                        hasBooks = true;
+                        let div = document.createElement('div'); div.className = 'book-card';
+                        div.innerHTML = `<img src="${book.image || 'cover.jpg'}" class="book-cover"><div class="pin-icon">📌</div><div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); padding:5px; text-align:center; font-size:12px;">${book.name}</div>`;
+                        div.onclick = () => openReader(book.file, book.name);
+                        grid.appendChild(div);
+                    }
+                });
+            }
+            if(hasBooks) { waiting.style.display = 'none'; grid.style.display = 'grid'; } 
+            else { waiting.style.display = 'flex'; grid.style.display = 'none'; }
+        }
 
-            var count = 0;
-            autoBookList.forEach(book => {
-                if (allowedBooks[book.name]) {
-                    count++;
-                    var div = document.createElement('div');
-                    div.className = "book-card";
+        // --- 3. READER ---
+        function openReader(file, title) {
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('reader-screen').style.display = 'block';
+            let frame = document.getElementById('book-frame');
+            document.getElementById('book-title-disp').innerText = title;
+            frame.src = file;
+            frame.onload = function() {
+                let lastPos = localStorage.getItem('pos_' + title);
+                if(lastPos) frame.contentWindow.scrollTo(0, lastPos);
+                frame.contentWindow.onscroll = function() { localStorage.setItem('pos_' + title, frame.contentWindow.scrollY); };
+            };
+        }
+        function closeReader() {
+            document.getElementById('reader-screen').style.display = 'none';
+            document.getElementById('home-screen').style.display = 'block';
+            document.getElementById('book-frame').src = "";
+            document.getElementById('search-bar').style.display = 'none';
+        }
+        function toggleSearch() { let bar = document.getElementById('search-bar'); bar.style.display = (bar.style.display === 'flex') ? 'none' : 'flex'; }
+        function performSearch() {
+            let txt = document.getElementById('search-input').value;
+            let frame = document.getElementById('book-frame').contentWindow;
+            if(frame && frame.find) frame.find(txt); else alert("Search not supported on this device.");
+        }
+
+        // --- 4. ABOUT US (NEW CONTENT) ---
+        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+        
+        function showAbout() {
+            let content = `
+                <div class="about-text">
+                    <h2 style="color:gold; text-align:center; border-bottom:1px solid gold; padding-bottom:10px;">॥ प्रज्ञासूर्य ॥</h2>
                     
-                    var imgHTML = book.image 
-                        ? `<img src="${book.image}" class="thumb" onerror="this.style.display='none'">` 
-                        : `<div class="thumb" style="display:flex; justify-content:center; align-items:center; color:#777; font-size:12px;">No Cover</div>`;
+                    <img src="photo1.jpg" style="width:100%; border-radius:10px; margin-bottom:15px; border:1px solid rgba(255,255,255,0.2);">
                     
-                    div.innerHTML = `${imgHTML}<div class="book-title">${book.name}</div>`;
-                    div.onclick = function() { if(allowedBooks[book.name]) openReader(book.file, book.name); };
-                    container.appendChild(div);
+                    <p>"ज्याप्रमाणे आकाशात सूर्य तळपत असतो आणि त्याच्या प्रकाशाने संपूर्ण विश्व उजळून निघते, त्याचप्रमाणे आपल्या साधकांच्या आयुष्यातील अज्ञानाचा अंधकार दूर करून त्यांना 'ब्रह्मविद्येचा' लख्ख प्रकाश देणारे साक्षात <span class="highlight">'प्रज्ञासूर्य' म्हणजे प. पू. प. म. श्री मोठे बाबा अंकुळनेरकर</span> होत."</p>
+                    
+                    <p>या विश्वात सूर्याचे स्थान अढळ आहे, सूर्य कधीही मावळत नाही, तो फक्त आपली जागा बदलतो. अगदी त्याचप्रमाणे, प. पू. श्री मोठेबाबांचे अस्तित्व आणि त्यांचे कार्य आजही अखंड आणि अविरत सुरू आहे.</p>
+                    
+                    <p>शास्त्रांमध्ये 'सर्वविद्' आणि 'ब्रह्मनिष्ठ' अशा महापुरुषांचे वर्णन आढळते. श्रीमोठेबाबा हे या वर्णनाचे मूर्तिमंत रूप आहेत. गीतेतील १३ व्या अध्यायातील 'ज्ञानियाची लक्षणे' त्यांच्या ठायी अनुभवास येतात.</p>
+                    
+                    <p>श्रीमोठेबाबा हे केवळ एक व्यक्ती नसून ती एक <span class="highlight">'अखंड चेतना'</span> आहे. जसा सूर्य स्वतः प्रकाशीत होऊन जगाला प्रकाश देतो, तसे श्रीमोठेबाबा आपल्या तपाच्या सामर्थ्याने साधकांचे जीवन उज्वल करत आहेत.</p>
+
+                    <p style="text-align:center; color:gold; font-style:italic;">हे ॲप, आणि आमचा हा छोटासा प्रयत्न, त्या महातेजस्वी 'प्रज्ञासूर्या'च्या चरणी अत्यंत विनम्र भावाने समर्पित आहे.</p>
+
+                    <h3 class="sub-title">॥ ब्रह्मविद्या - स्वाध्याय आणि चिंतन ॥</h3>
+                    <p>प. पू. श्री मोठे बाबांनी जी 'ब्रह्मविद्या' दिली आहे, तिचे रक्षण करणे हे परम कर्तव्य आहे. संन्यास आश्रमात 'स्वाध्याय' आणि 'विहार' याला महत्त्व आहे. प्रवासात ग्रंथांच्या अनुपलब्धतेमुळे खंड पडू नये, यासाठी हे <strong>'ब्रह्मविद्या ॲप' (Digital Library)</strong> तयार करण्यात आले आहे.</p>
+
+                    <img src="photo2.jpg" style="width:100%; border-radius:10px; margin:15px 0; border:1px solid rgba(255,255,255,0.2);">
+
+                    <p><strong style="color:cyan;">या ॲपचा मुख्य उद्देश:</strong></p>
+                    <ul style="padding-left:20px;">
+                        <li><strong>१. अखंड स्वाध्याय:</strong> साधक कोणत्याही स्थानी असले तरी, त्यांना वाचन करता यावे.</li>
+                        <li><strong>२. दुर्मिळ ग्रंथ रक्षण:</strong> प्राचीन हस्तलिखिते आणि ग्रंथ डिजिटल स्वरूपात सुरक्षित राहावेत.</li>
+                        <li><strong>३. बाबांचे विचार:</strong> प. पू. मोठे बाबांची शिकवण आणि मार्गदर्शन नित्यनियम पाळण्यासाठी सहाय्यक ठरावे.</li>
+                    </ul>
+
+                    <p><span class="highlight">श्री देवदत्त आश्रम, जाधववाडी</span> हे या कार्याचे मुख्य प्रेरणास्थान आहे. श्रीमोठेबाबांच्या तपाने पुनीत झालेली ही भूमी म्हणजे ब्रह्मविद्येचे विद्यापीठच आहे.</p>
+                    
+                    <h3 style="text-align:center; color:gold; margin-top:20px;">॥ श्रीदत्तात्रेयप्रभू महाराज की जय ॥</h3>
+                </div>
+                <button onclick="closeContent()" class="btn-glow" style="margin-top:20px;">मागे जा</button>
+            `;
+            document.getElementById('dynamic-content').innerHTML = content;
+            document.getElementById('content-modal').style.display = 'flex';
+        }
+
+        function showFeedback() {
+            let content = `
+                <h2 style="color:cyan;">फीडबॅक</h2>
+                <div id="msg-box" style="height:300px; overflow-y:auto; background:#222; padding:10px; border-radius:10px; margin-bottom:10px;"></div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="fb-input" placeholder="संदेश लिहा..." style="width:70%;">
+                    <button onclick="sendFeedback()" style="background:linear-gradient(90deg, #00c6ff, #0072ff); color:white; border:none; padding:10px; border-radius:5px; flex:1;">Go</button>
+                </div>
+                <button onclick="closeContent()" class="btn-glow" style="margin-top:10px;">बंद करा</button>
+            `;
+            document.getElementById('dynamic-content').innerHTML = content;
+            document.getElementById('content-modal').style.display = 'flex';
+            loadMessages();
+        }
+        function sendFeedback() {
+            let txt = document.getElementById('fb-input').value;
+            if(txt) { db.ref('feedback/' + deviceId).push({ sender: 'user', text: txt, time: Date.now() }); document.getElementById('fb-input').value = ""; }
+        }
+        function loadMessages() {
+            db.ref('feedback/' + deviceId).off();
+            db.ref('feedback/' + deviceId).on('child_added', snap => {
+                let m = snap.val();
+                let box = document.getElementById('msg-box');
+                if(box) {
+                    let color = (m.sender === 'admin') ? 'gold' : 'white';
+                    let bg = (m.sender === 'admin') ? 'rgba(255, 215, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+                    let align = (m.sender === 'admin') ? 'left' : 'right';
+                    box.innerHTML += `<div style="text-align:${align}; margin:5px;"><span style="background:${bg}; color:${color}; padding:8px 12px; border-radius:10px; display:inline-block;">${m.text}</span></div>`;
+                    box.scrollTop = box.scrollHeight;
                 }
             });
-            if(count === 0) container.innerHTML = "<p style='text-align:center; padding-top:50px; color:#aaa; grid-column:span 2;'>कृपया ॲडमिनशी संपर्क साधा.</p>";
         }
-
-        function openReader(file, title) {
-            document.getElementById('library-screen').style.display = 'none';
-            document.getElementById('reader-screen').style.display = 'block';
-            document.getElementById('frame').src = file;
-            document.getElementById('read-title').innerText = title;
+        function showHelp() {
+            document.getElementById('dynamic-content').innerHTML = "<h2>मदत</h2><p>१. ॲडमिनने परवानगी दिल्यावरच पुस्तके दिसतील.<br>२. ३० दिवसांनी ॲप एक्सपायर होईल.<br>३. सर्चसाठी वाचताना खालील आयकॉन वापरा.</p><button onclick='closeContent()' class='btn-glow'>बंद करा</button>";
+            document.getElementById('content-modal').style.display = 'flex';
         }
-        function closeBook() {
-            document.getElementById('reader-screen').style.display = 'none';
-            document.getElementById('library-screen').style.display = 'block';
-            document.getElementById('frame').src = "";
+        function showProfile() {
+             document.getElementById('dynamic-content').innerHTML = `<h2>प्रोफाईल</h2><p>नाव: ${userName}</p><p>ID: ${deviceId}</p><p>Validity: 30 Days</p><button onclick='closeContent()' class='btn-glow'>बंद करा</button>`;
+             document.getElementById('content-modal').style.display = 'flex';
         }
+        function closeContent() { document.getElementById('content-modal').style.display = 'none'; }
     </script>
 </body>
 </html>
