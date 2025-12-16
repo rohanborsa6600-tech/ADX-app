@@ -1,4 +1,4 @@
-name: Build Brahmavidya Offline Success
+name: Build Brahmavidya Manual Upload
 
 on:
   push:
@@ -17,25 +17,8 @@ jobs:
       
       - uses: actions/setup-java@v3
         with: { distribution: 'temurin', java-version: '17' }
-      
-      # --- 🔥 STEP 1: इंटरनेटशिवाय व्हॅलिड फोटो बनवणे (64x64 PNG) 🔥 ---
-      - name: Generate Offline Assets
-        run: |
-          echo "Generating valid 64x64 PNG assets..."
-          
-          # 1. LOGO (Valid 64x64 Green Box Icon - No Internet Needed)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAySURBVGhD7cExAQAAAMKg9U9tCy8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADmzpAAGqv5J7AAAAAElFTkSuQmCC" | base64 -d > logo.png
-          
-          # 2. LOGIN BG (Using the same valid PNG)
-          cp logo.png login_bg.png
-          
-          # 3. COVER (Using the same valid PNG)
-          cp logo.png cover.jpg
-          
-          # फाईल तयार झाली का ते तपासणे
-          ls -lh *.png *.jpg
 
-      # --- STEP 2: प्रोजेक्ट तयार करणे ---
+      # --- STEP 1: प्रोजेक्ट तयार करणे ---
       - name: Create Project & Config
         run: |
           cordova create myapp com.brahmavidya.ovi "Brahmavidya"
@@ -46,7 +29,8 @@ jobs:
           cordova plugin add cordova-plugin-whitelist
           cordova platform add android
           
-          # Settings (Using the valid generated logo)
+          # Settings
+          # तुम्ही अपलोड केलेला 'logo.png' ॲपचा आयकॉन म्हणून सेट करत आहोत
           sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
@@ -54,36 +38,42 @@ jobs:
           sed -i '/<widget/a <preference name="BackgroundColor" value="0xff000000" />' config.xml
           cd ..
 
-      # --- STEP 3: फाईल्स कॉपी करणे ---
+      # --- STEP 2: फाईल्स कॉपी करणे ---
       - name: Copy Files & Generate Smart List
         run: |
-          # Clean default files
+          # डिफॉल्ट फाईल्स काढणे
           rm myapp/www/index.html myapp/www/css/index.css myapp/www/js/index.js
           
-          # Copy your files
+          # तुमचे HTML आणि JS कॉपी करणे
           cp index.html myapp/www/
           cp *.html myapp/www/ || true
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
           
-          # Copy Generated Images to www folder
+          # 🔥 महत्त्वाचे: तुम्ही गिटहबवर अपलोड केलेले ५ फोटो ॲपमध्ये कॉपी करणे 🔥
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
+          cp *.jpeg myapp/www/ || true
           
-          # Generate filelist.js
+          # फोटो आले आहेत का ते पाहणे (Log मध्ये दिसेल)
+          ls -lh myapp/www/
+          
+          # File List बनवणे
           cd myapp/www
           echo "var autoBookList = [" > filelist.js
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
               baseName=$(basename "$f" .html)
-              # इमेज नाही, पण एरर टाळण्यासाठी logo.png वापरले
-              echo "{ name: '$baseName', file: '$f', image: 'logo.png' }," >> filelist.js
+              # कव्हर फोटो असेल तर तो वापरणे, नाहीतर डीफॉल्ट cover.jpg
+              img="cover.jpg"
+              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
+              echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
             fi
           done
           echo "];" >> filelist.js
           cd ../..
 
-      # --- STEP 4: APK बिल्ड करणे ---
+      # --- STEP 3: APK बिल्ड करणे ---
       - name: Build APK
         run: |
           cd myapp
@@ -91,5 +81,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Success-APK
+          name: Brahmavidya-Manual-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
