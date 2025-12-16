@@ -1,1 +1,86 @@
+name: Brahmavidya Final Build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with: { node-version: 16 }
+          
+      - run: npm install -g cordova
+      
+      - uses: actions/setup-java@v3
+        with: { distribution: 'temurin', java-version: '17' }
+
+      # --- STEP 1: प्रोजेक्ट तयार करणे ---
+      - name: Create Project & Config
+        run: |
+          cordova create myapp com.brahmavidya.ovi "Brahmavidya"
+          cd myapp
+          cordova plugin add cordova-plugin-statusbar
+          cordova plugin add cordova-plugin-network-information
+          cordova plugin add cordova-plugin-device
+          cordova plugin add cordova-plugin-whitelist
+          cordova platform add android
+          
+          # Settings
+          # तुम्ही अपलोड केलेला 'logo.png' ॲपचा आयकॉन म्हणून सेट करत आहोत
+          sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
+          sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
+          sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
+          sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
+          sed -i '/<widget/a <preference name="BackgroundColor" value="0xff000000" />' config.xml
+          cd ..
+
+      # --- STEP 2: फाईल्स कॉपी करणे ---
+      - name: Copy Files & Generate Smart List
+        run: |
+          # डिफॉल्ट फाईल्स काढणे
+          rm myapp/www/index.html myapp/www/css/index.css myapp/www/js/index.js
+          
+          # तुमचे HTML आणि JS कॉपी करणे
+          cp index.html myapp/www/
+          cp *.html myapp/www/ || true
+          cp *.css myapp/www/ || true
+          cp *.js myapp/www/ || true
+          
+          # 🔥 महत्त्वाचे: तुम्ही गिटहबवर अपलोड केलेले ५ फोटो ॲपमध्ये कॉपी करणे 🔥
+          cp *.png myapp/www/ || true
+          cp *.jpg myapp/www/ || true
+          cp *.jpeg myapp/www/ || true
+          
+          # फोटो आले आहेत का ते पाहणे (Log मध्ये दिसेल)
+          ls -lh myapp/www/
+          
+          # File List बनवणे
+          cd myapp/www
+          echo "var autoBookList = [" > filelist.js
+          for f in *.html; do
+            if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
+              baseName=$(basename "$f" .html)
+              # कव्हर फोटो असेल तर तो वापरणे, नाहीतर डीफॉल्ट cover.jpg
+              img="cover.jpg"
+              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
+              echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
+            fi
+          done
+          echo "];" >> filelist.js
+          cd ../..
+
+      # --- STEP 3: APK बिल्ड करणे ---
+      - name: Build APK
+        run: |
+          cd myapp
+          cordova build android --debug
+          
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Brahmavidya-APK
+          path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
 
