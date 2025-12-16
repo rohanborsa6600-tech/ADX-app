@@ -1,4 +1,4 @@
-name: Brahmavidya Final Build
+name: Brahmavidya Final Manual Build
 
 on:
   push:
@@ -10,11 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
+      # सेटअप
       - uses: actions/setup-node@v3
         with: { node-version: 16 }
-          
       - run: npm install -g cordova
-      
       - uses: actions/setup-java@v3
         with: { distribution: 'temurin', java-version: '17' }
 
@@ -30,15 +29,14 @@ jobs:
           cordova platform add android
           
           # Settings
-          # तुम्ही अपलोड केलेला 'logo.png' ॲपचा आयकॉन म्हणून सेट करत आहोत
+          # तुम्ही अपलोड केलेला 'logo.png' वापरला जाईल
           sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
-          sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
           sed -i '/<widget/a <preference name="BackgroundColor" value="0xff000000" />' config.xml
           cd ..
 
-      # --- STEP 2: फाईल्स कॉपी करणे ---
+      # --- STEP 2: तुमचे फोटो आणि फाईल्स कॉपी करणे ---
       - name: Copy Files & Generate Smart List
         run: |
           # डिफॉल्ट फाईल्स काढणे
@@ -50,12 +48,15 @@ jobs:
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
           
-          # 🔥 महत्त्वाचे: तुम्ही गिटहबवर अपलोड केलेले ५ फोटो ॲपमध्ये कॉपी करणे 🔥
-          cp *.png myapp/www/ || true
-          cp *.jpg myapp/www/ || true
-          cp *.jpeg myapp/www/ || true
+          # 🔥 सर्वात महत्त्वाचे: तुम्ही अपलोड केलेले ५ फोटो ॲपमध्ये टाकणे 🔥
+          echo "Copying uploaded photos..."
+          cp logo.png myapp/www/ || echo "logo.png not found!"
+          cp login_bg.png myapp/www/ || echo "login_bg.png not found!"
+          cp cover.jpg myapp/www/ || echo "cover.jpg not found!"
+          cp photo1.jpg myapp/www/ || echo "photo1.jpg not found!"
+          cp photo2.jpg myapp/www/ || echo "photo2.jpg not found!"
           
-          # फोटो आले आहेत का ते पाहणे (Log मध्ये दिसेल)
+          # खात्री करण्यासाठी लिस्ट दाखवणे
           ls -lh myapp/www/
           
           # File List बनवणे
@@ -64,7 +65,6 @@ jobs:
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
               baseName=$(basename "$f" .html)
-              # कव्हर फोटो असेल तर तो वापरणे, नाहीतर डीफॉल्ट cover.jpg
               img="cover.jpg"
               if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
               echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
@@ -81,6 +81,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-APK
+          name: Brahmavidya-Final-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
-
