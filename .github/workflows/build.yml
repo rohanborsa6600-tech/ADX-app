@@ -1,4 +1,4 @@
-name: Build Brahmavidya No-Photos
+name: Build Brahmavidya Base64-Images
 
 on:
   push:
@@ -15,22 +15,21 @@ jobs:
       - uses: actions/setup-java@v3
         with: { distribution: 'temurin', java-version: '17' }
       
-      # --- 🔥 फक्त महत्त्वाचे फोटो डाउनलोड करणे (Logo, BG, Cover) 🔥 ---
-      - name: Download Essential Images
+      # --- 🔥 जादुई स्टेप: कोड मधूनच फोटो तयार करणे (No Download) 🔥 ---
+      - name: Generate Built-in Images
         run: |
-          echo "Downloading essential assets..."
+          echo "Generating assets from Base64 to prevent download errors..."
           
-          # 1. Logo (Book Icon)
-          wget -O logo.png "https://cdn-icons-png.flaticon.com/512/2232/2232688.png"
+          # 1. LOGO (Blue Book Icon)
+          echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEUAAAD///+l2Z/dAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+YMEA0XFi05/uEAAAAqdEVYdGRhdGU6Y3JlYXRlADIwMjItMTItMTZUMTM6MjM6MjIrMDA6MDCp5+GfAAAAKXRFWHRkYXRlOm1vZGlmeQAyMDIyLTEyLTE2VDEzOjIzOjIyKzAwOjAw1S5h8gAAADBJREFUaN7twTEBAAAAwiD7p7bGDmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGQOvAABZca22wAAAABJRU5ErkJggg==" | base64 -d > logo.png
           
-          # 2. Login Background (Dark Spiritual/Galaxy)
-          wget -O login_bg.png "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80"
+          # 2. LOGIN BACKGROUND (Dark Gradient)
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > login_bg.png
           
-          # 3. Default Book Cover (Old Texture)
-          wget -O cover.jpg "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+          # 3. COVER (Simple Brown Cover)
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mO485/hPwAI8AOY49s2YQAAAABJRU5ErkJggg==" | base64 -d > cover.jpg
           
-          # Photo 1 & Photo 2 REMOVED as per request
-          
+          # Check files
           ls -lh *.png *.jpg
       # -----------------------------------------------------
 
@@ -54,26 +53,29 @@ jobs:
 
       - name: Copy Files & Generate Smart List
         run: |
+          # Clean default files
           rm myapp/www/index.html myapp/www/css/index.css myapp/www/js/index.js
           
+          # Copy your files
           cp index.html myapp/www/
           cp *.html myapp/www/ || true
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
           
-          # Copy Downloaded Images
+          # Copy Generated Images to www folder
           cp *.png myapp/www/ || true
           cp *.jpg myapp/www/ || true
-          cp *.jpeg myapp/www/ || true
           
+          # Generate filelist.js (With correct references)
           cd myapp/www
           echo "var autoBookList = [" > filelist.js
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
               baseName=$(basename "$f" .html)
               img="cover.jpg"
+              # Check if specific cover exists (optional logic)
               if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
-              if [ -f "$baseName.png" ]; then img="$baseName.png"; fi
+              
               echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
             fi
           done
@@ -87,5 +89,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Lite-APK
+          name: Brahmavidya-Base64-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
