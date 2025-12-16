@@ -1,93 +1,209 @@
-name: Build Brahmavidya Base64-Images
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ब्रह्मविद्या</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="cordova.js"></script>
+    <script src="filelist.js"></script>
 
-on:
-  push:
-    branches: [ main ]
+    <style>
+        /* --- 🌌 SPIRITUAL UNIVERSE THEME (CSS ONLY) --- */
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; overflow: hidden; user-select: none; }
+        
+        /* 🔥 ANIMATED BACKGROUND (CSS MAGIC) */
+        .universe-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #000000);
+            background-size: 400% 400%;
+            animation: gradientAnim 15s ease infinite;
+        }
+        @keyframes gradientAnim { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
+        
+        /* Floating Particles (Stars) */
+        .stars { position: absolute; width: 2px; height: 2px; background: white; box-shadow: 0 0 10px white; border-radius: 50%; animation: float 5s infinite; }
+        @keyframes float { 0% {transform:translateY(0px); opacity:0;} 50% {opacity:1;} 100% {transform:translateY(-100px); opacity:0;} }
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with: { node-version: 16 }
-      - run: npm install -g cordova
-      - uses: actions/setup-java@v3
-        with: { distribution: 'temurin', java-version: '17' }
-      
-      # --- 🔥 जादुई स्टेप: कोड मधूनच फोटो तयार करणे (No Download) 🔥 ---
-      - name: Generate Built-in Images
-        run: |
-          echo "Generating assets from Base64 to prevent download errors..."
-          
-          # 1. LOGO (Blue Book Icon)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEUAAAD///+l2Z/dAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+YMEA0XFi05/uEAAAAqdEVYdGRhdGU6Y3JlYXRlADIwMjItMTItMTZUMTM6MjM6MjIrMDA6MDCp5+GfAAAAKXRFWHRkYXRlOm1vZGlmeQAyMDIyLTEyLTE2VDEzOjIzOjIyKzAwOjAw1S5h8gAAADBJREFUaN7twTEBAAAAwiD7p7bGDmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGQOvAABZca22wAAAABJRU5ErkJggg==" | base64 -d > logo.png
-          
-          # 2. LOGIN BACKGROUND (Dark Gradient)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > login_bg.png
-          
-          # 3. COVER (Simple Brown Cover)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mO485/hPwAI8AOY49s2YQAAAABJRU5ErkJggg==" | base64 -d > cover.jpg
-          
-          # Check files
-          ls -lh *.png *.jpg
-      # -----------------------------------------------------
+        .screen { display: none; position: absolute; width: 100%; height: 100%; flex-direction: column; }
+        .active { display: flex; }
 
-      - name: Create Project & Config
-        run: |
-          cordova create myapp com.brahmavidya.ovi "Brahmavidya"
-          cd myapp
-          cordova plugin add cordova-plugin-statusbar
-          cordova plugin add cordova-plugin-network-information
-          cordova plugin add cordova-plugin-device
-          cordova plugin add cordova-plugin-whitelist
-          cordova platform add android
-          
-          # Settings
-          sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
-          sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
-          sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
-          sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
-          sed -i '/<widget/a <preference name="BackgroundColor" value="0xff000000" />' config.xml
-          cd ..
+        /* --- 🎨 CSS BOOK COVER GENERATOR --- */
+        .css-book {
+            width: 100%; height: 75%; 
+            background: linear-gradient(135deg, #4a3b2a 0%, #8b5a2b 100%); /* Brown Leather look */
+            border-radius: 5px 15px 15px 5px;
+            box-shadow: inset 10px 0 20px rgba(0,0,0,0.5), 5px 5px 15px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden; border-left: 10px solid #2a2015; /* Binding */
+        }
+        /* Om Symbol Decoration */
+        .css-book::before { content: '🕉️'; font-size: 40px; opacity: 0.3; filter: drop-shadow(0 0 5px gold); }
+        .css-book::after { content: ''; position: absolute; top: 10px; right: 10px; bottom: 10px; left: 20px; border: 2px solid rgba(255,215,0,0.3); }
 
-      - name: Copy Files & Generate Smart List
-        run: |
-          # Clean default files
-          rm myapp/www/index.html myapp/www/css/index.css myapp/www/js/index.js
-          
-          # Copy your files
-          cp index.html myapp/www/
-          cp *.html myapp/www/ || true
-          cp *.css myapp/www/ || true
-          cp *.js myapp/www/ || true
-          
-          # Copy Generated Images to www folder
-          cp *.png myapp/www/ || true
-          cp *.jpg myapp/www/ || true
-          
-          # Generate filelist.js (With correct references)
-          cd myapp/www
-          echo "var autoBookList = [" > filelist.js
-          for f in *.html; do
-            if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
-              baseName=$(basename "$f" .html)
-              img="cover.jpg"
-              # Check if specific cover exists (optional logic)
-              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
-              
-              echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
-            fi
-          done
-          echo "];" >> filelist.js
-          cd ../..
+        /* Login Card */
+        #login-screen { justify-content: center; align-items: center; }
+        .glass-panel {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 30px; width: 80%; max-width: 350px; text-align: center;
+            box-shadow: 0 0 30px rgba(0,243,255,0.1);
+        }
+        
+        input { width: 90%; padding: 12px; margin: 15px 0; background: rgba(0,0,0,0.5); border: 1px solid #444; border-radius: 10px; color: white; text-align: center; font-size: 16px; }
+        
+        .btn-glow {
+            width: 100%; padding: 12px; margin-top: 10px;
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+            border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px;
+            box-shadow: 0 0 15px rgba(0,210,255,0.5); transition: 0.3s;
+        }
+        .btn-glow:active { transform: scale(0.95); }
 
-      - name: Build APK
-        run: |
-          cd myapp
-          cordova build android --debug
-          
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Brahmavidya-Base64-APK
-          path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+        /* Home Grid */
+        .header { padding: 40px 20px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; overflow-y: auto; padding-bottom: 100px; }
+        
+        .book-item {
+            display: flex; flex-direction: column; align-items: center;
+            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1); position: relative;
+        }
+        .book-title { font-size: 14px; margin-top: 10px; text-align: center; color: #ddd; font-weight: 500; }
+        .pin-badge { position: absolute; top: 5px; right: 5px; font-size: 16px; z-index: 2; }
+        
+        /* Progress Bar */
+        .prog-track { width: 100%; height: 4px; background: #333; margin-top: 10px; border-radius: 2px; }
+        .prog-fill { height: 100%; background: #00f3ff; width: 0%; border-radius: 2px; box-shadow: 0 0 5px #00f3ff; }
+
+        /* Reader & Other UI same as before... */
+        #reader-screen { background: white; z-index: 100; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; display: none; flex-direction: column; }
+        .modal-content { padding: 20px; overflow-y: auto; height: 100%; }
+        
+        .gold-txt { color: #ffd700; font-weight: bold; }
+        .cyan-txt { color: #00f3ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="universe-bg">
+        <div class="stars" style="top:20%; left:20%; animation-delay:0s;"></div>
+        <div class="stars" style="top:50%; left:80%; animation-delay:1s;"></div>
+        <div class="stars" style="top:80%; left:40%; animation-delay:2s;"></div>
+    </div>
+
+    <div id="login-screen" class="screen active">
+        <div class="glass-panel">
+            <h1 style="margin:0; background: linear-gradient(to right, #fff, #00f3ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ब्रह्मविद्या</h1>
+            <p style="color:#aaa; font-size:12px; margin-top:5px;">Digital Vachan Pothi</p>
+            <div style="font-style:italic; font-size:12px; margin:20px 0; color:#ddd; border-top:1px solid #333; border-bottom:1px solid #333; padding:10px 0;">
+                "ज्ञानरत्नाचा ठेवा... अधिकारेंवीण नेदावा"
+            </div>
+            <input type="text" id="u_name" placeholder="तुमचे नाव (Name)">
+            <input type="tel" id="u_pin" placeholder="PIN (922523)" maxlength="6">
+            <button class="btn-glow" id="login-btn" onclick="doLogin()">प्रवेश करा</button>
+        </div>
+    </div>
+
+    <div id="home-screen" class="screen">
+        <div class="header">
+            <span style="font-size:20px; font-weight:bold; color:#00f3ff;" id="disp-name">User</span>
+            <span onclick="openSettings()" style="font-size:22px;">⚙️</span>
+        </div>
+        
+        <div style="padding:10px; display:flex; gap:10px; overflow-x:auto;">
+            <div onclick="filterCat('All')" style="padding:5px 15px; background:rgba(0,243,255,0.2); border-radius:20px; border:1px solid #00f3ff; font-size:12px;">All Books</div>
+            <div onclick="filterCat('Pinned')" style="padding:5px 15px; background:rgba(255,255,255,0.1); border-radius:20px; font-size:12px;">📌 Pinned</div>
+        </div>
+
+        <div id="waiting" style="display:none; text-align:center; margin-top:50px; color:#ffd700;">loading...</div>
+        <div class="grid" id="book-grid"></div>
+    </div>
+
+    <div id="reader-screen" class="screen">
+        <div style="height:50px; background:#111; display:flex; align-items:center; justify-content:space-between; padding:0 15px;">
+            <span onclick="closeReader()" style="color:white; font-size:24px;">←</span>
+            <span id="reader-title" style="color:white; font-size:14px;">Reading...</span>
+            <span onclick="changeFont(1)" style="font-size:18px;">A+</span>
+        </div>
+        <iframe id="book-frame" style="width:100%; height:calc(100% - 50px); border:none; background:white;"></iframe>
+    </div>
+
+    <div id="modal-box" class="modal">
+        <div class="modal-content" id="modal-body"></div>
+        <button onclick="document.getElementById('modal-box').style.display='none'" style="padding:15px; background:#333; color:white; border:none; width:100%;">Close</button>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://adx-bk-default-rtdb.asia-southeast1.firebasedatabase.app" };
+        let db; let did; let deviceUuid = "unknown";
+        document.addEventListener('deviceready', function() {
+            try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } catch(e){}
+            deviceUuid = device.uuid;
+            let savedName = localStorage.getItem('u_name');
+            if(savedName) { document.getElementById('u_name').value = savedName; document.getElementById('u_pin').value = "922523"; doLogin(); }
+        }, false);
+        
+        let pinned = JSON.parse(localStorage.getItem('pins')) || []; let currentFilter = 'All';
+
+        function doLogin() {
+            let n = document.getElementById('u_name').value.trim(); let p = document.getElementById('u_pin').value;
+            if(!n) return alert("नाव टाका"); if(p !== "922523") return alert("चुकीचा पिन");
+            let safeId = "U_" + n.replace(/[.#$[\]]/g, '_');
+            document.getElementById('login-btn').innerText = "Wait...";
+            
+            db.ref('users/' + safeId).once('value', snapshot => {
+                let d = snapshot.val();
+                if (d && d.deviceId && d.deviceId !== deviceUuid) {
+                    alert("⚠️ Access Denied: Device Mismatch!");
+                    document.getElementById('login-btn').innerText = "प्रवेश करा";
+                } else { proceed(n, safeId); }
+            });
+        }
+
+        function proceed(name, safeId) {
+            did = safeId; localStorage.setItem('u_name', name);
+            document.getElementById('disp-name').innerText = name;
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('home-screen').classList.add('active');
+            
+            if(navigator.onLine) {
+                db.ref('users/' + did).update({ name: name, deviceId: deviceUuid, isOnline: true, last_login: Date.now() });
+                db.ref('users/' + did + '/access').on('value', snap => renderBooks(snap.val() || {}));
+                db.ref('users/' + did + '/isBlocked').on('value', snap => { if(snap.val()) { alert("Blocked!"); location.reload(); } });
+                db.ref('users/' + did + '/isOnline').onDisconnect().set(false);
+            } else { renderBooks(JSON.parse(localStorage.getItem('cached_access')) || {}); }
+        }
+
+        function renderBooks(access) {
+            localStorage.setItem('cached_access', JSON.stringify(access));
+            let grid = document.getElementById('book-grid'); grid.innerHTML = "";
+            
+            if(typeof autoBookList !== 'undefined') {
+                autoBookList.forEach(b => {
+                    if(access[b.name]) {
+                        if(currentFilter === 'Pinned' && !pinned.includes(b.name)) return;
+                        let pct = localStorage.getItem('prog_' + b.name) || 0;
+                        let pinIcon = pinned.includes(b.name) ? '📌' : '';
+                        
+                        // 🔥 CSS BOOK COVER USED HERE
+                        grid.innerHTML += `
+                        <div class="book-item" onclick="openBook('${b.file}', '${b.name}')" oncontextmenu="togglePin('${b.name}'); return false;">
+                            <div class="pin-badge">${pinIcon}</div>
+                            <div class="css-book"></div>
+                            <div class="book-title">${b.name}</div>
+                            <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+                        </div>`;
+                    }
+                });
+            }
+        }
+        
+        function togglePin(name) { if(pinned.includes(name)) pinned=pinned.filter(x=>x!==name); else pinned.push(name); localStorage.setItem('pins', JSON.stringify(pinned)); location.reload(); }
+        function filterCat(c) { currentFilter = c; location.reload(); }
+        function openBook(f,n) { document.getElementById('home-screen').classList.remove('active'); document.getElementById('reader-screen').classList.add('active'); document.getElementById('book-frame').src = f; document.getElementById('reader-title').innerText = n; }
+        function closeReader() { document.getElementById('reader-screen').classList.remove('active'); document.getElementById('home-screen').classList.add('active'); document.getElementById('book-frame').src = ""; location.reload(); }
+        function openSettings() { document.getElementById('modal-body').innerHTML = `<h2 style="color:#00f3ff">About</h2><p>Brahmavidya App</p><p>Devadatta Ashram</p>`; document.getElementById('modal-box').style.display='flex'; }
+    </script>
+</body>
+</html>
