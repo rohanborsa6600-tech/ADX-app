@@ -1,4 +1,4 @@
-name: Build Brahmavidya Final-Auto-Images
+name: Build Brahmavidya Fixed-Images
 
 on:
   push:
@@ -15,10 +15,10 @@ jobs:
       - uses: actions/setup-java@v3
         with: { distribution: 'temurin', java-version: '17' }
       
-      # --- 🔥 जादुई स्टेप: सर्व फोटो इंटरनेटवरून घेणे 🔥 ---
+      # --- 🔥 जादुई स्टेप: सर्व फोटो इंटरनेटवरून घेणे (FIXED LINKS) 🔥 ---
       - name: Download ALL Auto Images
         run: |
-          echo "Downloading all assets to fix empty file errors..."
+          echo "Downloading all assets..."
           
           # 1. Logo (Book Icon)
           wget -O logo.png "https://cdn-icons-png.flaticon.com/512/2232/2232688.png"
@@ -32,8 +32,8 @@ jobs:
           # 4. Photo 1 (About Us - Top)
           wget -O photo1.jpg "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
           
-          # 5. Photo 2 (About Us - Bottom)
-          wget -O photo2.jpg "https://images.unsplash.com/photo-1528360983277-13d9b152c6d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+          # 5. Photo 2 (About Us - Bottom) - 🔥 NEW WORKING LINK 🔥
+          wget -O photo2.jpg "https://images.unsplash.com/photo-1519681393798-3828fb4090bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
           
           # फाईल साईज चेक करणे (खात्रीसाठी)
           ls -lh *.png *.jpg
@@ -97,5 +97,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: Brahmavidya-Final-APK
+          name: Brahmavidya-Fixed-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
