@@ -1,4 +1,4 @@
-name: Build Brahmavidya Final Clean
+name: Build Brahmavidya Official Fix
 
 on:
   push:
@@ -10,21 +10,31 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # Indentation Fix: साधी आणि सरळ पद्धत
       - uses: actions/setup-node@v3
-        with:
-          node-version: 16
+        with: { node-version: 16 }
           
       - run: npm install -g cordova
       
       - uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+        with: { distribution: 'temurin', java-version: '17' }
       
-      # --- ❌ NO IMAGE GENERATION (Skipped to prevent errors) ---
+      # --- 🔥 STEP 1: अधिकृत आयकॉन डाउनलोड करणे (100% Safe) 🔥 ---
+      - name: Download Official Assets
+        run: |
+          echo "Downloading official stable assets..."
+          
+          # 1. Official Cordova Logo (This never fails)
+          wget -O logo.png "https://raw.githubusercontent.com/apache/cordova-app-hello-world/master/www/img/logo.png"
+          
+          # 2. Cover Image (Using the same stable logo for cover to avoid errors)
+          cp logo.png cover.jpg
+          
+          # 3. Login BG (Using logo as temporary BG to prevent crash)
+          cp logo.png login_bg.png
+          
+          ls -lh *.png *.jpg
 
-      # --- STEP 1: प्रोजेक्ट तयार करणे ---
+      # --- STEP 2: प्रोजेक्ट तयार करणे ---
       - name: Create Project & Config
         run: |
           cordova create myapp com.brahmavidya.ovi "Brahmavidya"
@@ -35,14 +45,15 @@ jobs:
           cordova plugin add cordova-plugin-whitelist
           cordova platform add android
           
-          # Settings (आयकॉन लाइन काढून टाकली आहे - डिफॉल्ट वापरले जाईल)
+          # Settings (आता आपण डाउनलोड केलेला अधिकृत लोगो वापरत आहोत)
+          sed -i '/<widget/a <icon src="www/logo.png" />' config.xml
           sed -i '/<widget/a <preference name="Fullscreen" value="true" />' config.xml
           sed -i '/<widget/a <preference name="Orientation" value="portrait" />' config.xml
           sed -i '/<widget/a <preference name="LoadUrlTimeoutValue" value="70000" />' config.xml
           sed -i '/<widget/a <preference name="BackgroundColor" value="0xff000000" />' config.xml
           cd ..
 
-      # --- STEP 2: फाईल्स कॉपी करणे ---
+      # --- STEP 3: फाईल्स कॉपी करणे ---
       - name: Copy Files & Generate Smart List
         run: |
           # Clean default files
@@ -54,7 +65,9 @@ jobs:
           cp *.css myapp/www/ || true
           cp *.js myapp/www/ || true
           
-          # (इथे फोटो कॉपी करण्याची स्टेप काढून टाकली आहे)
+          # Copy Official Images to www folder
+          cp *.png myapp/www/ || true
+          cp *.jpg myapp/www/ || true
           
           # Generate filelist.js
           cd myapp/www
@@ -62,14 +75,15 @@ jobs:
           for f in *.html; do
             if [ "$f" != "index.html" ] && [ "$f" != "admin.html" ]; then
               baseName=$(basename "$f" .html)
-              # इमेज नाही, त्यामुळे डिफॉल्ट रिकामे ठेवले आहे
-              echo "{ name: '$baseName', file: '$f', image: '' }," >> filelist.js
+              img="cover.jpg"
+              if [ -f "$baseName.jpg" ]; then img="$baseName.jpg"; fi
+              echo "{ name: '$baseName', file: '$f', image: '$img' }," >> filelist.js
             fi
           done
           echo "];" >> filelist.js
           cd ../..
 
-      # --- STEP 3: APK बिल्ड करणे ---
+      # --- STEP 4: APK बिल्ड करणे ---
       - name: Build APK
         run: |
           cd myapp
